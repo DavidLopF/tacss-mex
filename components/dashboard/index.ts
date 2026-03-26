@@ -6,3 +6,4 @@ export { LowStockAlert } from './low-stock-alert';
 export { InventarioTab } from './inventario-tab';
 export { PedidosTab } from './pedidos-tab';
 export { ComprasTab } from './compras-tab';
+export { ExecutiveInsights } from './executive-insights';

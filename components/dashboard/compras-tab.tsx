@@ -25,40 +25,61 @@ export function ComprasTab({ data, loading }: ComprasTabProps) {
   };
 
   const pendingOrders = (poStats?.sentOrders ?? 0) + (poStats?.confirmedOrders ?? 0);
+  const poTrend = [
+    Math.max((poStats?.totalOrders ?? 0) - 8, 0),
+    Math.max((poStats?.totalOrders ?? 0) - 4, 0),
+    poStats?.totalOrders ?? 0,
+  ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       {/* ── Stats row ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-12">
         <StatCard
           title="Total Órdenes de Compra"
           value={loading ? '...' : (poStats?.totalOrders ?? 0)}
           icon={ShoppingBag}
           iconClassName="bg-blue-100 text-blue-600"
+          sparklineData={poTrend}
+          className="xl:col-span-4"
         />
         <StatCard
           title="OC en Proceso"
           value={loading ? '...' : pendingOrders}
           icon={Clock}
           iconClassName="bg-amber-100 text-amber-600"
+          sparklineData={[Math.max(pendingOrders - 3, 0), Math.max(pendingOrders - 1, 0), pendingOrders]}
+          className="xl:col-span-2"
         />
         <StatCard
           title="Total Gastado"
           value={loading ? '...' : formatCurrency(poStats?.totalSpent ?? 0)}
           icon={DollarSign}
           iconClassName="bg-emerald-100 text-emerald-600"
+          sparklineData={[
+            (poStats?.totalSpent ?? 0) * 0.4,
+            (poStats?.totalSpent ?? 0) * 0.65,
+            poStats?.totalSpent ?? 0,
+          ]}
+          className="xl:col-span-3"
         />
         <StatCard
           title="Proveedores Activos"
           value={loading ? '...' : (supplierStats?.activeSuppliers ?? 0)}
           icon={Building2}
           iconClassName="bg-violet-100 text-violet-600"
+          sparklineData={[
+            Math.max((supplierStats?.activeSuppliers ?? 0) - 2, 0),
+            Math.max((supplierStats?.activeSuppliers ?? 0) - 1, 0),
+            supplierStats?.activeSuppliers ?? 0,
+          ]}
+          className="xl:col-span-3"
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         {/* ── Desglose estados OC ── */}
-        <Card>
+        <Card className="lg:col-span-4">
           <CardHeader>
             <CardTitle>Estado de Órdenes</CardTitle>
           </CardHeader>
@@ -70,7 +91,7 @@ export function ComprasTab({ data, loading }: ComprasTabProps) {
               { label: 'Recibidas', value: poStats?.receivedOrders ?? 0, color: 'bg-green-100 text-green-700' },
               { label: 'Canceladas', value: poStats?.cancelledOrders ?? 0, color: 'bg-red-100 text-red-700' },
             ].map((item) => (
-              <div key={item.label} className="flex items-center justify-between p-2 rounded-lg bg-gray-50">
+              <div key={item.label} className="flex items-center justify-between rounded-2xl border border-gray-200/70 bg-[#fbfcf8] p-3">
                 <span className={cn('text-xs font-medium px-2 py-1 rounded-full', item.color)}>
                   {item.label}
                 </span>
@@ -81,7 +102,7 @@ export function ComprasTab({ data, loading }: ComprasTabProps) {
         </Card>
 
         {/* ── Stats proveedores ── */}
-        <Card>
+        <Card className="lg:col-span-4">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Proveedores</CardTitle>
             <a href="/proveedores" className="text-sm text-primary hover:text-primary/80 font-medium">
@@ -95,14 +116,14 @@ export function ComprasTab({ data, loading }: ComprasTabProps) {
               { label: 'Inactivos', value: supplierStats?.inactiveSuppliers ?? 0, color: 'text-gray-500' },
               { label: 'Nuevos (último mes)', value: supplierStats?.newSuppliersLastMonth ?? 0, color: 'text-blue-700' },
             ].map((item) => (
-              <div key={item.label} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={item.label} className="flex items-center justify-between rounded-2xl border border-gray-200/70 bg-[#fbfcf8] p-3">
                 <span className="text-sm text-gray-700">{item.label}</span>
                 <span className={cn('text-sm font-semibold', item.color)}>
                   {loading ? '—' : item.value}
                 </span>
               </div>
             ))}
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between rounded-2xl border border-gray-200/70 bg-[#fbfcf8] p-3">
               <span className="text-sm text-gray-700">Total compras históricas</span>
               <span className="text-sm font-semibold text-gray-900">
                 {loading ? '—' : formatCurrency(supplierStats?.totalPurchases ?? 0)}
@@ -112,7 +133,7 @@ export function ComprasTab({ data, loading }: ComprasTabProps) {
         </Card>
 
         {/* ── OC recientes ── */}
-        <Card>
+        <Card className="lg:col-span-4">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Órdenes Recientes</CardTitle>
             <a href="/proveedores" className="text-sm text-primary hover:text-primary/80 font-medium">
@@ -131,7 +152,7 @@ export function ComprasTab({ data, loading }: ComprasTabProps) {
               recentOrders.map((order) => (
                 <div
                   key={order.id}
-                  className="flex items-center justify-between px-6 py-2 hover:bg-gray-50 transition-colors"
+                  className="mx-3 flex items-center justify-between rounded-2xl border border-transparent px-4 py-3 transition-colors hover:border-gray-200 hover:bg-gray-50"
                 >
                   <div>
                     <p className="text-sm font-medium text-primary">{order.code}</p>

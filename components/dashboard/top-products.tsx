@@ -19,10 +19,10 @@ export function TopProducts({ productos }: TopProductsProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         {productos.map((producto, index) => (
-          <div key={index} className="space-y-2">
+          <div key={index} className="space-y-2 rounded-2xl border border-gray-200/80 bg-[#fbfcf8] p-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-600">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-900/7 text-xs font-semibold text-gray-700">
                   {index + 1}
                 </span>
                 <span className="text-sm font-medium text-gray-900 truncate max-w-[180px]">
@@ -34,9 +34,9 @@ export function TopProducts({ productos }: TopProductsProps) {
                 <p className="text-xs text-gray-500">{producto.qtySold} vendidos</p>
               </div>
             </div>
-            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-2 overflow-hidden rounded-full bg-gray-200/70">
               <div
-                className="h-full bg-primary rounded-full transition-all"
+                className="h-full rounded-full bg-primary/80 transition-all"
                 style={{ width: `${(producto.qtySold / maxQty) * 100}%` }}
               />
             </div>

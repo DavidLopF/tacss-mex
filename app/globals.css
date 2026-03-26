@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #f5f6f1;
+  --foreground: #111827;
   /* Theming: set by CompanyProvider via JS, defaults here for SSR */
   --primary-color: #2563eb;
   --accent-color: #3b82f6;
@@ -13,14 +13,18 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--primary-color);
   --color-accent: var(--accent-color);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-manrope);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), "Avenir Next", "Segoe UI", sans-serif;
+  background-image:
+    radial-gradient(circle at 8% -8%, rgba(37, 99, 235, 0.1), transparent 28%),
+    radial-gradient(circle at 88% 8%, rgba(15, 23, 42, 0.07), transparent 22%);
+  min-height: 100vh;
 }
 
 /* Modal animations */

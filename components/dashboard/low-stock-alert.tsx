@@ -8,16 +8,16 @@ interface LowStockAlertProps {
 
 export function LowStockAlert({ productos }: LowStockAlertProps) {
   return (
-    <Card className="border-amber-200 bg-amber-50/50">
+    <Card className="border-amber-200/80 bg-amber-50/70">
       <CardHeader className="flex flex-row items-center gap-2">
-        <AlertTriangle className="w-5 h-5 text-amber-600" />
+        <AlertTriangle className="h-5 w-5 text-amber-600" />
         <CardTitle className="text-amber-900">Stock Bajo</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {productos.map((producto) => (
           <div
             key={producto.id}
-            className="flex items-center justify-between p-3 bg-white rounded-lg border border-amber-200"
+            className="flex items-center justify-between rounded-2xl border border-amber-200 bg-white px-3 py-3"
           >
             <div>
               <p className="text-sm font-medium text-gray-900">{producto.nombre}</p>

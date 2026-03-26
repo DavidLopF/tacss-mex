@@ -10,18 +10,18 @@ interface BadgeProps {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
-  default: 'bg-gray-100 text-gray-700',
-  success: 'bg-green-100 text-green-700',
-  warning: 'bg-amber-100 text-amber-700',
-  danger: 'bg-red-100 text-red-700',
-  info: 'bg-blue-100 text-blue-700',
+  default: 'bg-gray-900/10 text-gray-700 ring-1 ring-gray-700/10',
+  success: 'bg-emerald-500/14 text-emerald-700 ring-1 ring-emerald-600/20',
+  warning: 'bg-amber-500/18 text-amber-800 ring-1 ring-amber-600/25',
+  danger: 'bg-rose-500/14 text-rose-700 ring-1 ring-rose-600/20',
+  info: 'bg-sky-500/14 text-sky-700 ring-1 ring-sky-600/20',
 };
 
 export function Badge({ children, variant = 'default', className }: BadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+        'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold tracking-wide',
         variantStyles[variant],
         className
       )}

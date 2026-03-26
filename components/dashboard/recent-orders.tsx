@@ -1,6 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui';
 import { DashboardRecentOrder } from '@/services/dashboard';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { ArrowUpRight, Eye } from 'lucide-react';
 
 interface RecentOrdersProps {
   pedidos: DashboardRecentOrder[];
@@ -24,6 +25,15 @@ const estadoLabels: Record<string, string> = {
   CANCELADO: 'Cancelado',
 };
 
+function initialsOf(clientName: string): string {
+  return clientName
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((chunk) => chunk[0]?.toUpperCase() || '')
+    .join('');
+}
+
 export function RecentOrders({ pedidos }: RecentOrdersProps) {
   return (
     <Card>
@@ -33,55 +43,56 @@ export function RecentOrders({ pedidos }: RecentOrdersProps) {
           Ver todos
         </a>
       </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-100">
-                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
-                  Pedido
-                </th>
-                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
-                  Cliente
-                </th>
-                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
-                  Total
-                </th>
-                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
-                  Estado
-                </th>
-                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
-                  Fecha
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {pedidos.map((pedido) => (
-                <tr key={pedido.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4">
-                    <span className="text-sm font-medium text-primary">{pedido.code}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-900">{pedido.client}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm font-medium text-gray-900">
-                      {formatCurrency(pedido.total)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <Badge variant={estadoVariants[pedido.statusCode] ?? 'default'}>
-                      {estadoLabels[pedido.statusCode] ?? pedido.status}
-                    </Badge>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-500">{formatDateTime(new Date(pedido.createdAt))}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <CardContent className="space-y-3">
+        {pedidos.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-gray-300 px-4 py-7 text-center text-sm text-gray-500">
+            Sin pedidos recientes
+          </div>
+        )}
+
+        {pedidos.map((pedido) => (
+          <div
+            key={pedido.id}
+            className="group flex flex-col gap-4 rounded-2xl border border-gray-200/80 bg-white px-4 py-4 transition-all hover:-translate-y-0.5 hover:border-gray-300/80 hover:shadow-[0_14px_28px_rgba(15,23,42,0.1)] md:flex-row md:items-center md:justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-slate-800 to-slate-600 text-xs font-semibold text-white">
+                {initialsOf(pedido.client)}
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">{pedido.client}</p>
+                <p className="text-xs text-gray-500">Pedido {pedido.code}</p>
+                <p className="text-xs text-gray-400">{formatDateTime(new Date(pedido.createdAt))}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="text-right">
+                <p className="text-sm font-semibold text-gray-900">{formatCurrency(pedido.total)}</p>
+                <Badge variant={estadoVariants[pedido.statusCode] ?? 'default'}>
+                  {estadoLabels[pedido.statusCode] ?? pedido.status}
+                </Badge>
+              </div>
+
+              <div className="flex items-center gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+                <button
+                  type="button"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                  aria-label={`Ver pedido ${pedido.code}`}
+                >
+                  <Eye className="h-4 w-4" />
+                </button>
+                <a
+                  href="/pedidos"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                  aria-label="Ir a pedidos"
+                >
+                  <ArrowUpRight className="h-4 w-4" />
+                </a>
+              </div>
+            </div>
+          </div>
+        ))}
       </CardContent>
     </Card>
   );

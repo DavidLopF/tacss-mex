@@ -58,13 +58,13 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 h-screen bg-white border-r border-gray-200 transition-all duration-300',
+        'fixed left-0 top-0 z-40 h-screen bg-white/95 border-r border-gray-200/80 shadow-[0_0_0_1px_rgba(255,255,255,0.6),0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-sm transition-all duration-300',
         collapsed ? 'w-20' : 'w-64'
       )}
     >
       <div className="flex h-full flex-col">
         <div className={cn(
-          'flex items-center h-16 px-4 border-b border-gray-200',
+          'flex items-center h-20 px-4 border-b border-gray-100',
           collapsed ? 'justify-center' : 'justify-between'
         )}>
           {!collapsed && (
@@ -90,7 +90,8 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
           )}
           <button
             onClick={() => onCollapsedChange(!collapsed)}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-2.5 rounded-xl text-gray-500 hover:bg-gray-900/5 hover:text-gray-900 transition-colors"
+            aria-label={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
           >
             {collapsed ? (
               <Menu className="w-5 h-5 text-gray-600" />
@@ -100,28 +101,29 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
           </button>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-3 py-5 space-y-1.5 overflow-y-auto">
           {visibleNavigation.map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link
                 key={item.name}
                 href={item.href}
+                title={collapsed ? item.name : undefined}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors',
+                  'group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all',
                   isActive
                     ? 'text-white'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
+                    : 'text-gray-600 hover:bg-gray-900/5 hover:text-gray-900',
                   collapsed && 'justify-center'
                 )}
                 style={isActive ? { backgroundColor: settings.primaryColor + '15', color: settings.primaryColor } : undefined}
               >
                 <item.icon
-                  className="w-5 h-5 flex-shrink-0"
+                  className={cn('w-[18px] h-[18px] flex-shrink-0 transition-transform', !isActive && 'group-hover:scale-105')}
                   style={isActive ? { color: settings.primaryColor } : undefined}
                 />
                 {!collapsed && (
-                  <span className="font-medium">{item.name}</span>
+                  <span className="text-[13px] font-medium tracking-wide">{item.name}</span>
                 )}
               </Link>
             );
@@ -132,12 +134,13 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
           <button
             onClick={logout}
             className={cn(
-              'flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors',
+              'flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-900/5 hover:text-gray-900 transition-colors',
               collapsed && 'justify-center'
             )}
+            title={collapsed ? 'Cerrar sesión' : undefined}
           >
-            <LogOut className="w-5 h-5 flex-shrink-0" />
-            {!collapsed && <span className="font-medium">Cerrar sesión</span>}
+            <LogOut className="w-[18px] h-[18px] flex-shrink-0" />
+            {!collapsed && <span className="text-[13px] font-medium tracking-wide">Cerrar sesión</span>}
           </button>
         </div>
       </div>

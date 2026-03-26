@@ -23,7 +23,7 @@ function SocketInitializer() {
 export function AppShell({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   const isPublicPage = ['/login', '/forgot-password', '/reset-password'].includes(pathname);
 
@@ -46,7 +46,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   // Authenticated pages: full layout
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-transparent">
       <SocketInitializer />
       <Sidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
       <div
