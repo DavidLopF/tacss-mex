@@ -21,15 +21,15 @@ export function TopProducts({ productos }: TopProductsProps) {
         {productos.map((producto, index) => (
           <div key={index} className="space-y-2 rounded-2xl border border-gray-200/80 bg-[#fbfcf8] p-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex min-w-0 items-start gap-3 pr-3">
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-900/7 text-xs font-semibold text-gray-700">
                   {index + 1}
                 </span>
-                <span className="text-sm font-medium text-gray-900 truncate max-w-[180px]">
+                <span className="text-sm font-medium leading-snug text-gray-900 break-words" title={producto.name}>
                   {producto.name}
                 </span>
               </div>
-              <div className="text-right">
+              <div className="shrink-0 text-right">
                 <p className="text-sm font-medium text-gray-900">{formatCurrency(producto.revenue)}</p>
                 <p className="text-xs text-gray-500">{producto.qtySold} vendidos</p>
               </div>

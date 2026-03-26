@@ -24,11 +24,20 @@ const STATUS_TABS: { key: StatusTab; label: string; color: string; dot: string }
   { key: 'cancelado', label: 'Cancelado', color: 'text-red-700 border-red-600', dot: 'bg-red-500' },
 ];
 
-const ITEMS_PER_PAGE = 12;
+const DEFAULT_ITEMS_PER_PAGE = 6;
+
+const STATUS_ORDER: Record<EstadoPedido, number> = {
+  en_curso: 1,
+  transmitido: 2,
+  cotizado: 3,
+  enviado: 4,
+  cancelado: 5,
+};
 
 export function OrdersBoard({ pedidos, onOrderClick, onStatusChange }: OrdersBoardProps) {
-  const [activeTab, setActiveTab] = useState<StatusTab>('todos');
+  const [activeTab, setActiveTab] = useState<StatusTab>('en_curso');
   const [page, setPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(DEFAULT_ITEMS_PER_PAGE);
 
   // Conteo por estado
   const counts = useMemo(() => {
@@ -41,21 +50,34 @@ export function OrdersBoard({ pedidos, onOrderClick, onStatusChange }: OrdersBoa
 
   // Filtrar por tab activo
   const filteredPedidos = useMemo(() => {
-    if (activeTab === 'todos') return pedidos;
-    return pedidos.filter((p) => p.estado === activeTab);
+    const result = activeTab === 'todos'
+      ? pedidos
+      : pedidos.filter((p) => p.estado === activeTab);
+
+    return [...result].sort((a, b) => {
+      if (STATUS_ORDER[a.estado] !== STATUS_ORDER[b.estado]) {
+        return STATUS_ORDER[a.estado] - STATUS_ORDER[b.estado];
+      }
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    });
   }, [pedidos, activeTab]);
 
   // Paginación
-  const totalPages = Math.max(1, Math.ceil(filteredPedidos.length / ITEMS_PER_PAGE));
+  const totalPages = Math.max(1, Math.ceil(filteredPedidos.length / itemsPerPage));
   const safePage = Math.min(page, totalPages);
   const paginatedPedidos = useMemo(() => {
-    const start = (safePage - 1) * ITEMS_PER_PAGE;
-    return filteredPedidos.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredPedidos, safePage]);
+    const start = (safePage - 1) * itemsPerPage;
+    return filteredPedidos.slice(start, start + itemsPerPage);
+  }, [filteredPedidos, safePage, itemsPerPage]);
 
   // Reset page on tab change
   const handleTabChange = (tab: StatusTab) => {
     setActiveTab(tab);
+    setPage(1);
+  };
+
+  const handleItemsPerPageChange = (value: number) => {
+    setItemsPerPage(value);
     setPage(1);
   };
 
@@ -98,6 +120,26 @@ export function OrdersBoard({ pedidos, onOrderClick, onStatusChange }: OrdersBoa
         })}
       </div>
 
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-gray-200/80 bg-white px-3 py-2">
+        <p className="text-sm text-gray-600">
+          {activeTab === 'todos'
+            ? 'Vista general ordenada por estado y fecha'
+            : `Mostrando estado: ${STATUS_TABS.find((tab) => tab.key === activeTab)?.label ?? activeTab}`}
+        </p>
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <span>Por página</span>
+          <select
+            value={itemsPerPage}
+            onChange={(event) => handleItemsPerPageChange(Number(event.target.value))}
+            className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700"
+          >
+            <option value={6}>6</option>
+            <option value={9}>9</option>
+            <option value={12}>12</option>
+          </select>
+        </div>
+      </div>
+
       {/* Cards Grid */}
       {paginatedPedidos.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-gray-400">
@@ -105,7 +147,7 @@ export function OrdersBoard({ pedidos, onOrderClick, onStatusChange }: OrdersBoa
           <p className="text-sm font-medium">No hay pedidos en este estado</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {paginatedPedidos.map((pedido) => (
             <OrderCard
               key={pedido.id}
@@ -119,10 +161,10 @@ export function OrdersBoard({ pedidos, onOrderClick, onStatusChange }: OrdersBoa
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
           <p className="text-sm text-gray-500">
-            Mostrando {((safePage - 1) * ITEMS_PER_PAGE) + 1}–
-            {Math.min(safePage * ITEMS_PER_PAGE, filteredPedidos.length)} de {filteredPedidos.length} pedidos
+            Mostrando {((safePage - 1) * itemsPerPage) + 1}–
+            {Math.min(safePage * itemsPerPage, filteredPedidos.length)} de {filteredPedidos.length} pedidos
           </p>
           <div className="flex items-center gap-1">
             <button

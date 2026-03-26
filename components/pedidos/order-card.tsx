@@ -47,19 +47,19 @@ export function OrderCard({ pedido, onClick, onStatusChange }: OrderCardProps) {
   return (
     <div
       onClick={onClick}
-      className={`p-4 rounded-lg border ${colors.border} ${colors.bg} hover:shadow-md transition-all cursor-pointer group w-full flex flex-col`}
+      className={`w-full cursor-pointer rounded-2xl border p-4 ${colors.border} ${colors.bg} group flex flex-col transition-all hover:-translate-y-0.5 hover:shadow-lg`}
     >
       {/* Header */}
-      <div className="flex items-start justify-between mb-3 flex-shrink-0">
+      <div className="mb-3 flex flex-shrink-0 items-start justify-between">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
+          <div className="mb-1 flex items-center gap-2">
             <p className="font-mono text-sm font-semibold text-gray-900">{pedido.numero}</p>
             <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${colors.text} ${colors.bg} border ${colors.border}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${colors.dot}`} />
               {colors.label}
             </span>
           </div>
-          <p className="text-xs text-gray-500 flex items-center gap-1">
+          <p className="flex items-center gap-1 text-xs text-gray-500">
             <Calendar className="w-3 h-3" />
             {formatDateTime(pedido.createdAt)}
           </p>
@@ -82,13 +82,13 @@ export function OrderCard({ pedido, onClick, onStatusChange }: OrderCardProps) {
       </div>
 
       {/* Cliente */}
-      <div className="mb-3 pb-3 border-b border-gray-200 flex-shrink-0">
-        <div className="flex items-center gap-2 mb-1">
+      <div className="mb-3 flex-shrink-0 border-b border-gray-200 pb-3">
+        <div className="mb-1 flex items-center gap-2">
           <User className="w-3 h-3 text-gray-500" />
-          <p className="text-sm font-medium text-gray-900 truncate">{pedido.clienteNombre}</p>
+          <p className="text-sm font-medium leading-snug text-gray-900 break-words">{pedido.clienteNombre}</p>
         </div>
         {pedido.clienteEmail && (
-          <p className="text-xs text-gray-500 ml-5 truncate">{pedido.clienteEmail}</p>
+          <p className="ml-5 text-xs text-gray-500 break-all">{pedido.clienteEmail}</p>
         )}
       </div>
 
@@ -102,22 +102,23 @@ export function OrderCard({ pedido, onClick, onStatusChange }: OrderCardProps) {
           <span>{cantidadTotal} unidades</span>
         </div>
         
-        <div className="space-y-1">
-          {pedido.lineas.slice(0, 2).map((linea) => (
-            <div key={linea.id} className="text-xs text-gray-700">
-              <span className="font-medium">{linea.cantidad}x</span> {linea.productoNombre}
+        <div className="space-y-1.5">
+          {pedido.lineas.slice(0, 3).map((linea) => (
+            <div key={linea.id} className="rounded-lg bg-white/70 px-2 py-1 text-xs text-gray-700">
+              <span className="font-medium">{linea.cantidad}x</span>{' '}
+              <span className="leading-snug break-words">{linea.productoNombre}</span>
             </div>
           ))}
-          {pedido.lineas.length > 2 && (
+          {pedido.lineas.length > 3 && (
             <p className="text-xs text-gray-500 italic">
-              +{pedido.lineas.length - 2} más...
+              +{pedido.lineas.length - 3} más...
             </p>
           )}
         </div>
       </div>
 
       {/* Total */}
-      <div className={`flex items-center justify-between pt-3 border-t border-gray-200 flex-shrink-0`}>
+      <div className="flex flex-shrink-0 items-center justify-between border-t border-gray-200 pt-3">
         <span className="text-xs font-medium text-gray-600">Total:</span>
         <span className={`text-base font-bold ${colors.text}`}>
           {formatCurrency(pedido.total)}

@@ -277,30 +277,30 @@ export default function ConfiguracionPage() {
 
   return (
     <PermissionGuard moduleCode="CONFIG">
-    <main className="p-6">
+    <main className="px-6 py-8 md:px-8 md:py-10">
       <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
 
-      <div className="space-y-6">
+      <div className="mx-auto max-w-[1240px] space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Configuración</h1>
-            <p className="text-gray-500">Gestión de usuarios, roles y permisos del sistema</p>
+            <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Configuración</h1>
+            <p className="mt-1 text-sm text-gray-500">Gestión de usuarios, roles y permisos del sistema</p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-gray-200">
-          <nav className="flex gap-6">
+        <div className="inline-flex w-full max-w-xl flex-wrap items-center gap-2 rounded-2xl border border-gray-200/80 bg-white/80 p-2 shadow-sm">
+          <nav className="flex w-full flex-wrap gap-2">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={cn(
-                  'flex items-center gap-2 px-1 py-3 text-sm font-medium border-b-2 transition-colors',
+                  'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors',
                   activeTab === tab.key
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'bg-white text-gray-900 shadow-sm ring-1 ring-gray-200'
+                    : 'text-gray-500 hover:bg-gray-100/70 hover:text-gray-800'
                 )}
               >
                 <tab.icon className="w-4 h-4" />
@@ -355,11 +355,25 @@ export default function ConfiguracionPage() {
         )}
 
         {activeTab === 'company' && (
-          <CompanySettingsForm
-            settings={companySettings}
-            onSave={handleCompanySettingsSave}
-            submitting={submitting}
-          />
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+            <div className="xl:col-span-3">
+              <div className="sticky top-24 rounded-2xl border border-gray-200/80 bg-white/80 p-5 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-500">Distribucion</p>
+                <h3 className="mt-2 text-lg font-semibold tracking-tight text-gray-900">Ajustes de Empresa</h3>
+                <p className="mt-2 text-sm leading-6 text-gray-600">
+                  Personaliza identidad visual y nombre comercial del CRM. Los cambios impactan sidebar, badges y botones.
+                </p>
+              </div>
+            </div>
+
+            <div className="xl:col-span-9 xl:justify-self-center">
+              <CompanySettingsForm
+                settings={companySettings}
+                onSave={handleCompanySettingsSave}
+                submitting={submitting}
+              />
+            </div>
+          </div>
         )}
       </div>
     </main>

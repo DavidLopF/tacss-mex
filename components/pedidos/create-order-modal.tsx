@@ -5,6 +5,7 @@ import { Card, Button } from '@/components/ui';
 import { 
   Search, 
   Plus, 
+  Minus,
   Trash2, 
   ShoppingCart, 
   DollarSign,
@@ -51,7 +52,7 @@ interface LineaCarrito {
 
 let carritoCounter = 0;
 
-const PRODUCTS_PER_PAGE = 3;
+const PRODUCTS_PER_PAGE = 8;
 
 export function CreateOrderModal({ isOpen, onClose, onSave }: CreateOrderModalProps) {
   // ── Tema ──────────────────────────────────────────────────────────
@@ -82,6 +83,13 @@ export function CreateOrderModal({ isOpen, onClose, onSave }: CreateOrderModalPr
   const [expandedHistorial, setExpandedHistorial] = useState<number | null>(null);
   const [historialPrecios, setHistorialPrecios] = useState<PriceHistoryItem[]>([]);
   const [loadingHistorial, setLoadingHistorial] = useState(false);
+
+  const historialOrdenado = [...historialPrecios].sort(
+    (a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime()
+  );
+  const precioHistoricoPromedio = historialOrdenado.length
+    ? historialOrdenado.reduce((sum, item) => sum + item.unitPrice, 0) / historialOrdenado.length
+    : null;
 
   const debouncedSearch = useDebounce(searchTerm, 400);
 
@@ -230,7 +238,7 @@ export function CreateOrderModal({ isOpen, onClose, onSave }: CreateOrderModalPr
 
   // ── Actualizar cantidad ───────────────────────────────────────────
   const actualizarCantidad = (lineaId: string, cantidad: number) => {
-    if (cantidad < 1) return;
+    if (!Number.isFinite(cantidad) || cantidad < 1) return;
     setCarrito(prev =>
       prev.map(linea =>
         linea.id === lineaId
@@ -242,7 +250,7 @@ export function CreateOrderModal({ isOpen, onClose, onSave }: CreateOrderModalPr
 
   // ── Actualizar precio unitario ────────────────────────────────────
   const actualizarPrecio = (lineaId: string, precio: number) => {
-    if (precio < 0) return;
+    if (!Number.isFinite(precio) || precio < 0) return;
     setCarrito(prev =>
       prev.map(linea =>
         linea.id === lineaId
@@ -351,7 +359,7 @@ export function CreateOrderModal({ isOpen, onClose, onSave }: CreateOrderModalPr
         <div className="flex-1 flex min-h-0">
 
           {/* ═══ Columna 1: Cliente + Búsqueda ═══ */}
-          <div className="w-80 flex-shrink-0 border-r border-gray-200 flex flex-col bg-gray-50/50">
+          <div className="w-[25rem] flex-shrink-0 border-r border-gray-200 flex flex-col bg-gray-50/50">
             {/* Cliente */}
             <div className="p-4 border-b border-gray-200">
               <div className="flex items-center gap-2 mb-3">
@@ -425,24 +433,24 @@ export function CreateOrderModal({ isOpen, onClose, onSave }: CreateOrderModalPr
                 productos.map((producto) => (
                   <div
                     key={producto.id}
-                    className="p-3 bg-white rounded-lg border border-gray-100 hover:shadow-md transition-all duration-200 cursor-pointer group transform hover:scale-[1.01]"
+                    className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
                     style={{ ['--hover-border' as string]: primary }}
                     onMouseEnter={e => (e.currentTarget.style.borderColor = primary)}
                     onMouseLeave={e => (e.currentTarget.style.borderColor = '')}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 flex-shrink-0 bg-gray-100 rounded flex items-center justify-center">
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gray-100">
                         <Package className="w-5 h-5 text-gray-400" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-sm font-medium text-gray-900 truncate">{producto.name}</p>
+                        <div className="flex items-start gap-1.5">
+                          <p className="text-sm font-semibold leading-snug text-gray-900 break-words">{producto.name}</p>
                           {getStockBadge(producto.stockStatus)}
                         </div>
                         {producto.variantName && (
-                          <p className="text-xs font-medium" style={{ color: primary }}>{producto.variantName}</p>
+                          <p className="text-xs font-medium break-words" style={{ color: primary }}>{producto.variantName}</p>
                         )}
-                        <p className="text-xs text-gray-400 truncate">
+                        <p className="text-xs text-gray-400 break-words leading-snug">
                           {producto.sku}{producto.category ? ` • ${producto.category}` : ''}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
@@ -467,7 +475,7 @@ export function CreateOrderModal({ isOpen, onClose, onSave }: CreateOrderModalPr
                       <button
                         onClick={() => agregarAlCarrito(producto)}
                         disabled={producto.stock <= 0}
-                        className="p-1.5 rounded-lg text-white disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 transition-all duration-200 hover:scale-110 active:scale-95"
+                        className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 hover:scale-110 active:scale-95"
                         style={{ backgroundColor: primary }}
                       >
                         <Plus className="w-4 h-4" />
@@ -485,27 +493,56 @@ export function CreateOrderModal({ isOpen, onClose, onSave }: CreateOrderModalPr
                           {expandedHistorial === producto.id ? 'Ocultar historial' : 'Ver historial'}
                         </button>
                         {expandedHistorial === producto.id && (
-                          <div className="mt-2 p-2 rounded space-y-1 animate-in slide-in-from-top-2 fade-in duration-200" style={{ backgroundColor: primaryBg }}>
+                          <div className="mt-2 rounded-xl border border-gray-200/80 bg-white p-2.5 space-y-2 animate-in slide-in-from-top-2 fade-in duration-200">
                             {loadingHistorial ? (
                               <p className="text-xs" style={{ color: primary }}>Cargando...</p>
                             ) : historialPrecios.length === 0 ? (
-                              <p className="text-xs" style={{ color: primary }}>Sin historial</p>
+                              <p className="text-xs text-gray-500">Sin historial para este cliente y producto.</p>
                             ) : (
-                              historialPrecios.slice(0, 3).map((h) => (
+                              <>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="rounded-lg px-2 py-1.5" style={{ backgroundColor: primaryBg }}>
+                                    <p className="text-[10px] text-gray-500 uppercase tracking-wide">Ultimo precio</p>
+                                    <p className="text-xs font-semibold" style={{ color: primary }}>
+                                      {formatCurrency(historialOrdenado[0].unitPrice)}
+                                    </p>
+                                  </div>
+                                  <div className="rounded-lg px-2 py-1.5" style={{ backgroundColor: primaryBg }}>
+                                    <p className="text-[10px] text-gray-500 uppercase tracking-wide">Promedio</p>
+                                    <p className="text-xs font-semibold" style={{ color: primary }}>
+                                      {precioHistoricoPromedio != null ? formatCurrency(precioHistoricoPromedio) : 'N/A'}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {historialOrdenado.slice(0, 4).map((h) => (
                                 <button
                                   key={h.orderId}
                                   onClick={() => agregarAlCarrito(producto, h.unitPrice)}
-                                  className="w-full flex items-center justify-between p-1.5 bg-white rounded text-xs transition-all duration-200 hover:scale-[1.02]"
+                                  className="w-full flex items-center justify-between rounded-lg border border-gray-200 bg-white p-2 text-xs transition-all duration-200 hover:scale-[1.01]"
                                   onMouseEnter={e => (e.currentTarget.style.backgroundColor = primaryBgMid)}
                                   onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}
                                 >
                                   <div className="text-left">
                                     <span className="text-gray-600">{new Date(h.orderDate).toLocaleDateString('es-MX')}</span>
-                                    <span className="text-gray-400 ml-1">• {h.orderCode}</span>
+                                    <span className="ml-1 text-gray-400">• {h.orderCode}</span>
+                                    <p className="text-[10px] text-gray-400">{h.quantity} uds • {h.orderStatus}</p>
                                   </div>
-                                  <span className="font-semibold" style={{ color: primary }}>{formatCurrency(h.unitPrice)}</span>
+                                  <div className="text-right">
+                                    <span className="font-semibold" style={{ color: primary }}>{formatCurrency(h.unitPrice)}</span>
+                                    <p className="text-[10px] text-gray-400">Aplicar precio</p>
+                                  </div>
                                 </button>
-                              ))
+                                ))}
+
+                                <button
+                                  onClick={() => agregarAlCarrito(producto, historialOrdenado[0].unitPrice)}
+                                  className="w-full rounded-lg px-2 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90"
+                                  style={{ backgroundColor: primary }}
+                                >
+                                  Usar ultimo precio para este producto
+                                </button>
+                              </>
                             )}
                           </div>
                         )}
@@ -552,6 +589,11 @@ export function CreateOrderModal({ isOpen, onClose, onSave }: CreateOrderModalPr
                 <h3 className="text-sm font-semibold text-gray-900">
                   Carrito ({carrito.length} {carrito.length === 1 ? 'item' : 'items'})
                 </h3>
+                {carrito.length > 0 && (
+                  <span className="text-xs text-gray-500">
+                    • {carrito.reduce((s, l) => s + l.cantidad, 0)} unidades
+                  </span>
+                )}
               </div>
             </div>
 
@@ -566,20 +608,21 @@ export function CreateOrderModal({ isOpen, onClose, onSave }: CreateOrderModalPr
               ) : (
                 <div className="space-y-3">
                   {carrito.map((linea) => (
-                    <Card key={linea.id} className="p-3 animate-in slide-in-from-right-4 fade-in duration-300 hover:shadow-md transition-shadow">
+                    <Card key={linea.id} className="animate-in slide-in-from-right-4 fade-in rounded-2xl border border-gray-200/80 p-3 duration-300 transition-shadow hover:shadow-md">
                       <div className="flex items-start gap-3">
-                        <div className="w-9 h-9 flex-shrink-0 bg-gray-100 rounded flex items-center justify-center">
+                        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gray-100">
                           <Package className="w-4 h-4 text-gray-400" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">{linea.producto.name}</p>
+                              <p className="text-sm font-semibold leading-snug text-gray-900 break-words">{linea.producto.name}</p>
                               {linea.producto.variantName && (
-                                <p className="text-xs" style={{ color: primary }}>{linea.producto.variantName}</p>
+                                <p className="text-xs break-words" style={{ color: primary }}>{linea.producto.variantName}</p>
                               )}
+                              <p className="text-[11px] text-gray-400">{linea.producto.sku}</p>
                               {linea.usandoPrecioHistorico && (
-                                <span className="inline-flex items-center gap-1 text-[10px]" style={{ color: primary }}>
+                                <span className="mt-0.5 inline-flex items-center gap-1 text-[10px]" style={{ color: primary }}>
                                   <History className="w-2.5 h-2.5" />Precio histórico
                                 </span>
                               )}
@@ -591,14 +634,35 @@ export function CreateOrderModal({ isOpen, onClose, onSave }: CreateOrderModalPr
                           <div className="grid grid-cols-3 gap-2 mt-2">
                             <div>
                               <label className="text-[10px] text-gray-500 block">Cant.</label>
-                              <input
-                                type="number"
-                                min="1"
-                                value={linea.cantidad}
-                                onChange={(e) => actualizarCantidad(linea.id, parseInt(e.target.value))}
-                                className="w-full px-2 py-1 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 transition-all"
-                                style={{ '--tw-ring-color': primary } as React.CSSProperties}
-                              />
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => actualizarCantidad(linea.id, linea.cantidad - 1)}
+                                  className="flex h-7 w-7 items-center justify-center rounded border border-gray-200 text-gray-500 hover:bg-gray-100"
+                                  disabled={linea.cantidad <= 1}
+                                >
+                                  <Minus className="h-3.5 w-3.5" />
+                                </button>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={linea.cantidad}
+                                  onChange={(e) => {
+                                    const value = Number(e.target.value);
+                                    if (Number.isNaN(value)) return;
+                                    actualizarCantidad(linea.id, value);
+                                  }}
+                                  className="w-full px-2 py-1 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 transition-all text-center"
+                                  style={{ '--tw-ring-color': primary } as React.CSSProperties}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => actualizarCantidad(linea.id, linea.cantidad + 1)}
+                                  className="flex h-7 w-7 items-center justify-center rounded border border-gray-200 text-gray-500 hover:bg-gray-100"
+                                >
+                                  <Plus className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
                             </div>
                             <div>
                               <label className="text-[10px] text-gray-500 block">P. Unit.</label>
@@ -609,7 +673,11 @@ export function CreateOrderModal({ isOpen, onClose, onSave }: CreateOrderModalPr
                                   min="0"
                                   step="0.01"
                                   value={linea.precioUnitario}
-                                  onChange={(e) => actualizarPrecio(linea.id, parseFloat(e.target.value))}
+                                  onChange={(e) => {
+                                    const value = Number(e.target.value);
+                                    if (Number.isNaN(value)) return;
+                                    actualizarPrecio(linea.id, value);
+                                  }}
                                   className="w-full pl-4 pr-1 py-1 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 transition-all"
                                   style={{ '--tw-ring-color': primary } as React.CSSProperties}
                                 />
@@ -620,6 +688,7 @@ export function CreateOrderModal({ isOpen, onClose, onSave }: CreateOrderModalPr
                               <p className="py-1 text-sm font-bold text-gray-900">
                                 {formatCurrency(linea.subtotal)}
                               </p>
+                              <p className="text-[10px] text-gray-400">Lista: {formatCurrency(linea.precioLista)}</p>
                             </div>
                           </div>
                         </div>
