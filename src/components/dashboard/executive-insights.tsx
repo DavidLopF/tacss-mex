@@ -1,6 +1,6 @@
-import { Badge, Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui';
-import { DashboardComprasSummary, DashboardSummary } from '@/src/services/dashboard';
-import { cn, formatCurrency, formatDateTime } from '@/src/lib/utils';
+import { Badge, Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
+import { DashboardComprasSummary, DashboardSummary } from '@/services/dashboard';
+import { cn, formatCurrency, formatDateTime } from '@/lib/utils';
 import { AlertTriangle, ArrowDown, ArrowUp, Boxes, ClipboardList, FileWarning, Users } from 'lucide-react';
 
 interface ExecutiveInsightsProps {

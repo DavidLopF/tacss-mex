@@ -1,9 +1,9 @@
 'use client';
 
-import { Modal } from '@/src/components/ui';
+import { Modal } from '@/components/ui';
 import { Calendar, Warehouse, User, Package } from 'lucide-react';
-import type { PartialReceipt } from '@/src/services/receptions';
-import { formatDateTime } from '@/src/lib/utils';
+import type { PartialReceipt } from '@/services/receptions';
+import { formatDateTime } from '@/lib/utils';
 
 interface ReceptionDetailModalProps {
   isOpen: boolean;

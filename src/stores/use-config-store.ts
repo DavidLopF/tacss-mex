@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Role, UserDetail } from '@/src/services/users';
+import type { Role, UserDetail } from '@/services/users';
 
 // ══════════════════════════════════════════════════════════════════════
 // ── Config Store (Zustand) ────────────────────────────────────────────

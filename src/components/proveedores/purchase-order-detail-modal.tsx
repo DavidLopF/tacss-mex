@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Calendar, Truck, Package, ArrowRight, Loader2, Percent, Save, ClipboardCheck, Eye, ChevronDown, ChevronUp } from 'lucide-react';
-import { Modal, Button } from '@/src/components/ui';
+import { Modal, Button } from '@/components/ui';
 import {
   PurchaseOrder,
   PurchaseOrderStatus,
@@ -11,14 +11,14 @@ import {
   PO_STATUS_TRANSITION_RULES,
   getAvailablePOTransitions,
   LANDED_COST_FIELDS,
-} from '@/src/services/suppliers';
-import type { UpdatePurchaseOrderCostsDto } from '@/src/services/suppliers';
+} from '@/services/suppliers';
+import type { UpdatePurchaseOrderCostsDto } from '@/services/suppliers';
 import {
   getReceptions,
   getReceptionProgress,
-} from '@/src/services/receptions';
-import type { PartialReceipt, ReceptionProgress } from '@/src/services/receptions';
-import { formatCurrency, formatDateTime } from '@/src/lib/utils';
+} from '@/services/receptions';
+import type { PartialReceipt, ReceptionProgress } from '@/services/receptions';
+import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { CreateReceptionModal } from './create-reception-modal';
 import { ReceptionDetailModal } from './reception-detail-modal';
 

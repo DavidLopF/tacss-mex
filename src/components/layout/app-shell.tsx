@@ -2,10 +2,10 @@
 
 import { ReactNode, useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/src/lib/auth-context';
-import { Sidebar } from '@/src/components/layout/sidebar';
-import { Header } from '@/src/components/layout/header';
-import { useSocketInit } from '@/src/lib/hooks/use-socket-init';
+import { useAuth } from '@/lib/auth-context';
+import { Sidebar } from '@/components/layout/sidebar';
+import { Header } from '@/components/layout/header';
+import { useSocketInit } from '@/lib/hooks/use-socket-init';
 
 /**
  * Componente invisible que inicializa la conexión SSE.

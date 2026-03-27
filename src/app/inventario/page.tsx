@@ -2,14 +2,14 @@
 
 import { useEffect, useCallback } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { InventoryTable, InventoryTableSkeleton, InventoryStats } from '@/src/components/inventario';
-import { Producto } from '@/src/types';
-import { getProducts, PaginatedProductsDto, getStadistics } from '@/src/services/products';
-import { useDebounce, useToast, usePermissions, useCrossTabSync } from '@/src/lib/hooks';
-import { ToastContainer } from '@/src/components/ui';
-import { PermissionGuard } from '@/src/components/layout';
-import { useInventoryStore } from '@/src/stores';
-import { broadcastInvalidation } from '@/src/lib/cross-tab-sync';
+import { InventoryTable, InventoryTableSkeleton, InventoryStats } from '@/components/inventario';
+import { Producto } from '@/types';
+import { getProducts, PaginatedProductsDto, getStadistics } from '@/services/products';
+import { useDebounce, useToast, usePermissions, useCrossTabSync } from '@/lib/hooks';
+import { ToastContainer } from '@/components/ui';
+import { PermissionGuard } from '@/components/layout';
+import { useInventoryStore } from '@/stores';
+import { broadcastInvalidation } from '@/lib/cross-tab-sync';
 
 export default function InventarioPage() {
   // ── Data & UI state (single shallow subscription) ──
@@ -112,44 +112,44 @@ export default function InventarioPage() {
 
   return (
     <PermissionGuard moduleCode="INVENTARIO">
-    <main className="p-6">
-      <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
-      
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <main className="p-6">
+        <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
+        
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Inventario</h1>
+              <p className="text-gray-500">Gestión de productos y control de stock</p>
+            </div>
+          </div>
+          
+          <InventoryStats statistics={statistics} />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Inventario</h1>
-            <p className="text-gray-500">Gestión de productos y control de stock</p>
+            {loading ? (
+              <InventoryTableSkeleton rows={limit} />
+            ) : (
+              <InventoryTable 
+                productos={products} 
+                onProductUpdate={canEdit ? handleProductUpdate : undefined}
+                onProductCreate={canCreate ? handleProductCreate : undefined}
+                onProductDelete={canDelete ? handleProductDelete : undefined}
+                onError={toast.error}
+                onSuccess={toast.success}
+                externalSearch={search}
+                onSearchChange={(v) => { setSearch(v); }}
+                externalPage={page}
+                onPageChange={(p) => setPage(p)}
+                externalItemsPerPage={limit}
+                onItemsPerPageChange={(newLimit) => { setLimit(newLimit); }}
+                totalItems={total}
+                canCreate={canCreate}
+                canEdit={canEdit}
+                canDelete={canDelete}
+              />
+            )}
           </div>
         </div>
-        
-        <InventoryStats statistics={statistics} />
-        <div>
-          {loading ? (
-            <InventoryTableSkeleton rows={limit} />
-          ) : (
-            <InventoryTable 
-              productos={products} 
-              onProductUpdate={canEdit ? handleProductUpdate : undefined}
-              onProductCreate={canCreate ? handleProductCreate : undefined}
-              onProductDelete={canDelete ? handleProductDelete : undefined}
-              onError={toast.error}
-              onSuccess={toast.success}
-              externalSearch={search}
-              onSearchChange={(v) => { setSearch(v); }}
-              externalPage={page}
-              onPageChange={(p) => setPage(p)}
-              externalItemsPerPage={limit}
-              onItemsPerPageChange={(newLimit) => { setLimit(newLimit); }}
-              totalItems={total}
-              canCreate={canCreate}
-              canEdit={canEdit}
-              canDelete={canDelete}
-            />
-          )}
-        </div>
-      </div>
-    </main>
+      </main>
     </PermissionGuard>
   );
 }

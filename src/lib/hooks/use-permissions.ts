@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth } from '@/src/lib/auth-context';
+import { useAuth } from '@/lib/auth-context';
 
 /**
  * Mapa de rutas a códigos de módulo del backend.

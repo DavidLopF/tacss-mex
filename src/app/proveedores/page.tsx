@@ -10,7 +10,7 @@ import {
   PurchaseOrderTable,
   PurchaseOrderTableSkeleton,
   PurchaseOrderStats,
-} from '@/src/components/proveedores';
+} from '@/components/proveedores';
 import {
   getSuppliers,
   createSupplier,
@@ -25,19 +25,19 @@ import {
   getPurchaseOrderStatistics,
   PURCHASE_ORDER_STATUS_LABELS,
   getPurchaseOrderById,
-} from '@/src/services/suppliers';
+} from '@/services/suppliers';
 import type {
   CreateSupplierDto,
   UpdateSupplierDto,
   CreatePurchaseOrderDto,
   PurchaseOrderStatus,
   UpdatePurchaseOrderCostsDto,
-} from '@/src/services/suppliers';
-import { useDebounce, useToast, useCrossTabSync } from '@/src/lib/hooks';
-import { ToastContainer } from '@/src/components/ui';
-import { PermissionGuard } from '@/src/components/layout';
-import { usePurchaseOrdersStore, useSuppliersStore } from '@/src/stores';
-import { broadcastInvalidation } from '@/src/lib/cross-tab-sync';
+} from '@/services/suppliers';
+import { useDebounce, useToast, useCrossTabSync } from '@/lib/hooks';
+import { ToastContainer } from '@/components/ui';
+import { PermissionGuard } from '@/components/layout';
+import { usePurchaseOrdersStore, useSuppliersStore } from '@/stores';
+import { broadcastInvalidation } from '@/lib/cross-tab-sync';
 
 type ActiveTab = 'suppliers' | 'purchase-orders';
 

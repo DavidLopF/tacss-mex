@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type {
   SupplierDetail,
   SupplierStatistics,
-} from '@/src/services/suppliers';
+} from '@/services/suppliers';
 
 // ══════════════════════════════════════════════════════════════════════
 // ── Suppliers Store (Zustand) ────────────────────────────────────────

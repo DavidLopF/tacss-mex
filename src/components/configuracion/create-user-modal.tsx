@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Modal, Button } from '@/src/components/ui';
-import type { CreateUserDto, Role } from '@/src/services/users';
-import { getAllRoles } from '@/src/services/users';
+import { Modal, Button } from '@/components/ui';
+import type { CreateUserDto, Role } from '@/services/users';
+import { getAllRoles } from '@/services/users';
 
 interface CreateUserModalProps {
   isOpen: boolean;

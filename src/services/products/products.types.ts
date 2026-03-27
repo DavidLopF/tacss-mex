@@ -1,4 +1,4 @@
-import { Producto } from '@/src/types';
+import { Producto } from '@/types';
 
 // ── Filtros para GET /api/products ──────────────────────────────────
 export interface ProductFiltersDto {

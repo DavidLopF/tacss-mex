@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import {
   InvalidationModule,
   onCrossTabInvalidation,
-} from '@/src/lib/cross-tab-sync';
+} from '@/lib/cross-tab-sync';
 
 /**
  * Hook que re-ejecuta `reloadFn` cuando OTRA pestaña invalida

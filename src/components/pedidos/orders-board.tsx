@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Pedido, EstadoPedido } from '@/src/types';
+import { Pedido, EstadoPedido } from '@/types';
 import { OrderCard } from './order-card';
-import { OrderStatusCode } from '@/src/services/orders';
+import { OrderStatusCode } from '@/services/orders';
 import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
 
 interface OrdersBoardProps {

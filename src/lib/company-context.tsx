@@ -1,8 +1,8 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
-import type { CompanySettings } from '@/src/services/company';
-import { DEFAULT_COMPANY_SETTINGS, getCompanySettings } from '@/src/services/company';
+import type { CompanySettings } from '@/services/company';
+import { DEFAULT_COMPANY_SETTINGS, getCompanySettings } from '@/services/company';
 
 const STORAGE_KEY = 'crm-configurations';
 

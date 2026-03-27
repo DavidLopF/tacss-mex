@@ -5,9 +5,9 @@
 // Patrón: tabs primarios para tipo de documento + filtros secundarios de estado
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useEffect, useState, useCallback } from 'react';
-import { Badge, Button } from '@/src/components/ui';
-import { CfdiInvoice, InvoiceFilters, InvoiceStatus, InvoiceType } from '@/src/services/invoices/invoices.types';
-import { getInvoices, syncInvoiceStatus } from '@/src/services/invoices/invoices.service';
+import { Badge, Button } from '@/components/ui';
+import { CfdiInvoice, InvoiceFilters, InvoiceStatus, InvoiceType } from '@/services/invoices/invoices.types';
+import { getInvoices, syncInvoiceStatus } from '@/services/invoices/invoices.service';
 
 // ── Metadatos de estado ────────────────────────────────────────────────────────
 const STATUS_META: Record<InvoiceStatus, { label: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'info' }> = {

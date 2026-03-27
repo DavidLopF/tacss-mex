@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Edit2, Package, DollarSign, Tag, Calendar, Plus, Minus, User, TrendingUp, Truck, Star, ClipboardList, ArrowUpDown } from 'lucide-react';
-import { Modal, Button, Badge, Card, CardContent, Select } from '@/src/components/ui';
-import { Producto } from '@/src/types';
-import { formatCurrency, formatDateTime } from '@/src/lib/utils';
-import { getAllClients, getClientPriceHistory, ClientListItem, PriceHistoryItem } from '@/src/services/clients';
-import { updateProduct, UpdateProductDto, getCategories, CategoryDto } from '@/src/services/products';
-import type { ApiProductDetail, ApiProductSupplier, ApiProductPurchaseHistory } from '@/src/services/products';
+import { Modal, Button, Badge, Card, CardContent, Select } from '@/components/ui';
+import { Producto } from '@/types';
+import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { getAllClients, getClientPriceHistory, ClientListItem, PriceHistoryItem } from '@/services/clients';
+import { updateProduct, UpdateProductDto, getCategories, CategoryDto } from '@/services/products';
+import type { ApiProductDetail, ApiProductSupplier, ApiProductPurchaseHistory } from '@/services/products';
 
 interface ProductDetailModalProps {
   producto: Producto | null;

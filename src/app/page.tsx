@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Calendar, LayoutDashboard, Package, ShoppingCart, Building2 } from 'lucide-react';
-import { InventarioTab, PedidosTab, ComprasTab, ExecutiveInsights } from '@/src/components/dashboard';
-import { PermissionGuard } from '@/src/components/layout';
-import { getDashboard, getDashboardCompras, DashboardSummary, DashboardComprasSummary } from '@/src/services/dashboard';
-import { cn } from '@/src/lib/utils';
+import { InventarioTab, PedidosTab, ComprasTab, ExecutiveInsights } from '@/components/dashboard';
+import { PermissionGuard } from '@/components/layout';
+import { getDashboard, getDashboardCompras, DashboardSummary, DashboardComprasSummary } from '@/services/dashboard';
+import { cn } from '@/lib/utils';
 
 function todayLabel(): string {
   return new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });

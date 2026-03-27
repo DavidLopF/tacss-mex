@@ -2,8 +2,8 @@ import { Package, AlertTriangle, TrendingUp, BarChart2 } from 'lucide-react';
 import { StatCard } from './stat-card';
 import { TopProducts } from './top-products';
 import { LowStockAlert } from './low-stock-alert';
-import { DashboardSummary } from '@/src/services/dashboard';
-import { formatCurrency } from '@/src/lib/utils';
+import { DashboardSummary } from '@/services/dashboard';
+import { formatCurrency } from '@/lib/utils';
 
 interface InventarioTabProps {
   data: DashboardSummary;

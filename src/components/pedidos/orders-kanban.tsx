@@ -1,8 +1,8 @@
 'use client';
 
-import { Pedido, EstadoPedido } from '@/src/types';
+import { Pedido, EstadoPedido } from '@/types';
 import { KanbanColumn } from './kanban-column';
-import { OrderStatusCode } from '@/src/services/orders';
+import { OrderStatusCode } from '@/services/orders';
 
 interface OrdersKanbanProps {
   pedidos: Pedido[];

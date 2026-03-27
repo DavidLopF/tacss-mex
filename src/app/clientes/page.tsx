@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { ClientTable, ClientTableSkeleton, ClientStats } from '@/src/components/clientes';
+import { ClientTable, ClientTableSkeleton, ClientStats } from '@/components/clientes';
 import {
   getClients,
   createClient,
@@ -11,12 +11,12 @@ import {
   getClientStatistics,
   CreateClientDto,
   UpdateClientDto,
-} from '@/src/services/clients';
-import { useDebounce, useToast, useCrossTabSync } from '@/src/lib/hooks';
-import { ToastContainer } from '@/src/components/ui';
-import { PermissionGuard } from '@/src/components/layout';
-import { useClientsStore } from '@/src/stores';
-import { broadcastInvalidation } from '@/src/lib/cross-tab-sync';
+} from '@/services/clients';
+import { useDebounce, useToast, useCrossTabSync } from '@/lib/hooks';
+import { ToastContainer } from '@/components/ui';
+import { PermissionGuard } from '@/components/layout';
+import { useClientsStore } from '@/stores';
+import { broadcastInvalidation } from '@/lib/cross-tab-sync';
 
 export default function ClientesPage() {
   // ── Data & UI state (single shallow subscription) ──

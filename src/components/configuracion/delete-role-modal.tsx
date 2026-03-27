@@ -1,8 +1,8 @@
 'use client';
 
 import { AlertTriangle } from 'lucide-react';
-import { Modal, Button } from '@/src/components/ui';
-import type { Role } from '@/src/services/users';
+import { Modal, Button } from '@/components/ui';
+import type { Role } from '@/services/users';
 
 interface DeleteRoleModalProps {
   isOpen: boolean;

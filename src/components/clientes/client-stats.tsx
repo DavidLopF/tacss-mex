@@ -1,7 +1,7 @@
 import { Users, UserCheck, UserX, UserPlus, DollarSign } from 'lucide-react';
-import { StatCard } from '@/src/components/dashboard';
-import { ClientStatistics } from '@/src/services/clients';
-import { formatCurrency } from '@/src/lib/utils';
+import { StatCard } from '@/components/dashboard';
+import { ClientStatistics } from '@/services/clients';
+import { formatCurrency } from '@/lib/utils';
 
 interface ClientStatsProps {
   statistics?: ClientStatistics;

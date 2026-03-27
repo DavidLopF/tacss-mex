@@ -1,9 +1,9 @@
 'use client';
 
 import { Truck, TruckIcon, UserX, UserPlus, DollarSign } from 'lucide-react';
-import { StatCard } from '@/src/components/dashboard';
-import { SupplierStatistics } from '@/src/services/suppliers';
-import { formatCurrency } from '@/src/lib/utils';
+import { StatCard } from '@/components/dashboard';
+import { SupplierStatistics } from '@/services/suppliers';
+import { formatCurrency } from '@/lib/utils';
 
 interface SupplierStatsProps {
   statistics?: SupplierStatistics;

@@ -3,7 +3,7 @@ import type {
   PurchaseOrder,
   PurchaseOrderStatus,
   PurchaseOrderStatistics,
-} from '@/src/services/suppliers';
+} from '@/services/suppliers';
 
 // ══════════════════════════════════════════════════════════════════════
 // ── Purchase Orders Store (Zustand) ──────────────────────────────────

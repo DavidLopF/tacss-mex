@@ -2,15 +2,15 @@
 
 import { useState } from 'react';
 import { Search, Plus, Eye, Edit, Trash2, User, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Card, Button, Badge } from '@/src/components/ui';
-import { ClientDetail } from '@/src/services/clients';
-import { getClientById } from '@/src/services/clients/clients.service';
-import { formatCurrency, formatDate } from '@/src/lib/utils';
+import { Card, Button, Badge } from '@/components/ui';
+import { ClientDetail } from '@/services/clients';
+import { getClientById } from '@/services/clients/clients.service';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import { ClientDetailModal } from './client-detail-modal';
 import { CreateClientModal } from './create-client-modal';
 import { EditClientModal } from './edit-client-modal';
 import { DeleteClientModal } from './delete-client-modal';
-import type { CreateClientDto, UpdateClientDto } from '@/src/services/clients';
+import type { CreateClientDto, UpdateClientDto } from '@/services/clients';
 
 interface ClientTableProps {
   clients: ClientDetail[];

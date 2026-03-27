@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import type { Producto } from '@/src/types';
-import type { ProductStatistics } from '@/src/services/products';
+import type { Producto } from '@/types';
+import type { ProductStatistics } from '@/services/products';
 
 // ══════════════════════════════════════════════════════════════════════
 // ── Inventory Store (Zustand) ─────────────────────────────────────────

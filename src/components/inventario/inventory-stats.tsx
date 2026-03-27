@@ -1,7 +1,7 @@
 import { Package, TrendingUp, CheckCircle, XCircle } from 'lucide-react';
-import { StatCard } from '@/src/components/dashboard';
-import { Producto } from '@/src/types';
-import { ProductStatistics } from '@/src/services/products';
+import { StatCard } from '@/components/dashboard';
+import { Producto } from '@/types';
+import { ProductStatistics } from '@/services/products';
 
 interface InventoryStatsProps {
   productos?: Producto[];

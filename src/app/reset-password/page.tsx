@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect, FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCompany } from '@/src/lib/company-context';
-import { resetPassword } from '@/src/services/auth';
+import { useCompany } from '@/lib/company-context';
+import { resetPassword } from '@/services/auth';
 import {
   ShieldCheck,
   ArrowLeft,

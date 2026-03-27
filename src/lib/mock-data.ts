@@ -1,4 +1,4 @@
-import { DashboardStats, VentasPorDia, TopProducto, PedidoReciente, Producto, Cliente, HistorialPrecioCliente, Pedido } from '@/src/types';
+import { DashboardStats, VentasPorDia, TopProducto, PedidoReciente, Producto, Cliente, HistorialPrecioCliente, Pedido } from '@/types';
 
 export const dashboardStats: DashboardStats = {
   totalProductos: 245,

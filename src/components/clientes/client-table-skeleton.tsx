@@ -1,4 +1,4 @@
-import { Card } from '@/src/components/ui';
+import { Card } from '@/components/ui';
 
 interface ClientTableSkeletonProps {
   rows?: number;

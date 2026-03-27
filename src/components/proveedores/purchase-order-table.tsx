@@ -2,17 +2,17 @@
 
 import { useState } from 'react';
 import { Search, Plus, Eye, Trash2, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Card, Button } from '@/src/components/ui';
+import { Card, Button } from '@/components/ui';
 import {
   PurchaseOrder,
   PurchaseOrderStatus,
   PURCHASE_ORDER_STATUS_LABELS,
   PURCHASE_ORDER_STATUS_COLORS,
   CreatePurchaseOrderDto,
-} from '@/src/services/suppliers';
-import type { UpdatePurchaseOrderCostsDto } from '@/src/services/suppliers';
-import { getPurchaseOrderById } from '@/src/services/suppliers/suppliers.service';
-import { formatCurrency, formatDateTime } from '@/src/lib/utils';
+} from '@/services/suppliers';
+import type { UpdatePurchaseOrderCostsDto } from '@/services/suppliers';
+import { getPurchaseOrderById } from '@/services/suppliers/suppliers.service';
+import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { PurchaseOrderDetailModal } from './purchase-order-detail-modal';
 import { CreatePurchaseOrderFullscreen } from './create-purchase-order-fullscreen';
 import { DeletePurchaseOrderModal } from './delete-purchase-order-modal';

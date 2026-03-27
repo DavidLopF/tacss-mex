@@ -1,9 +1,9 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Modal, Badge, Button } from '@/src/components/ui';
-import { Pedido } from '@/src/types';
-import { useCfdiStore } from '@/src/stores';
+import { Modal, Badge, Button } from '@/components/ui';
+import { Pedido } from '@/types';
+import { useCfdiStore } from '@/stores';
 import { 
   X, 
   User, 
@@ -29,7 +29,7 @@ import {
   Phone,
   Mail,
 } from 'lucide-react';
-import { formatCurrency, formatDateTime } from '@/src/lib/utils';
+import { formatCurrency, formatDateTime } from '@/lib/utils';
 
 interface OrderDetailModalProps {
   pedido: Pedido | null;

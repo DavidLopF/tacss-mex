@@ -2,15 +2,15 @@
 
 import { useState } from 'react';
 import { Search, Plus, Eye, Edit, Trash2, Truck, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Card, Button, Badge } from '@/src/components/ui';
-import { SupplierDetail } from '@/src/services/suppliers';
-import { getSupplierById } from '@/src/services/suppliers/suppliers.service';
-import { formatCurrency } from '@/src/lib/utils';
+import { Card, Button, Badge } from '@/components/ui';
+import { SupplierDetail } from '@/services/suppliers';
+import { getSupplierById } from '@/services/suppliers/suppliers.service';
+import { formatCurrency } from '@/lib/utils';
 import { SupplierDetailModal } from './supplier-detail-modal';
 import { CreateSupplierModal } from './create-supplier-modal';
 import { EditSupplierModal } from './edit-supplier-modal';
 import { DeleteSupplierModal } from './delete-supplier-modal';
-import type { CreateSupplierDto, UpdateSupplierDto } from '@/src/services/suppliers';
+import type { CreateSupplierDto, UpdateSupplierDto } from '@/services/suppliers';
 
 interface SupplierTableProps {
   suppliers: SupplierDetail[];

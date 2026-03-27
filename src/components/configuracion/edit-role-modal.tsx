@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Modal, Button } from '@/src/components/ui';
-import type { Role, UpdateRoleDto } from '@/src/services/users';
+import { Modal, Button } from '@/components/ui';
+import type { Role, UpdateRoleDto } from '@/services/users';
 
 interface EditRoleModalProps {
   isOpen: boolean;

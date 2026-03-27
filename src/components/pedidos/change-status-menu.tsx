@@ -7,7 +7,7 @@ import {
   ORDER_STATUS_LABELS,
   canTransitionToStatus,
   getAvailableTransitions,
-} from '@/src/services/orders';
+} from '@/services/orders';
 
 interface ChangeStatusMenuProps {
   currentStatusCode: string;

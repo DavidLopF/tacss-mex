@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Truck, Calendar, DollarSign, Mail, Phone, MapPin, User, Package, Plus, Trash2, Search, Star, X, Loader2 } from 'lucide-react';
-import { Modal, Badge, Button, Card, CardContent, ToastContainer } from '@/src/components/ui';
+import { Modal, Badge, Button, Card, CardContent, ToastContainer } from '@/components/ui';
 import {
   SupplierDetail,
   SupplierProductItem,
@@ -10,14 +10,14 @@ import {
   getSupplierProducts,
   addSupplierProduct,
   removeSupplierProduct,
-} from '@/src/services/suppliers';
+} from '@/services/suppliers';
 import {
   getOrderProducts,
   OrderProductItem,
   OrderProductsPaginatedResponse,
-} from '@/src/services/orders';
-import { formatCurrency, formatDateTime } from '@/src/lib/utils';
-import { useDebounce, useToast } from '@/src/lib/hooks';
+} from '@/services/orders';
+import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { useDebounce, useToast } from '@/lib/hooks';
 
 type TabId = 'info' | 'products';
 

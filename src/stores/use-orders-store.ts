@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Pedido, EstadoPedido } from '@/src/types';
+import type { Pedido, EstadoPedido } from '@/types';
 
 // ══════════════════════════════════════════════════════════════════════
 // ── Orders Store (Zustand) ────────────────────────────────────────────

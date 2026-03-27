@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, Button } from '@/src/components/ui';
+import { Card, Button } from '@/components/ui';
 import { 
   Search, 
   Plus, 
@@ -19,20 +19,20 @@ import {
   X,
   User,
 } from 'lucide-react';
-import { formatCurrency } from '@/src/lib/utils';
-import { useDebounce } from '@/src/lib/hooks';
-import { useCompany } from '@/src/lib/company-context';
+import { formatCurrency } from '@/lib/utils';
+import { useDebounce } from '@/lib/hooks';
+import { useCompany } from '@/lib/company-context';
 import { 
   getOrderProducts, 
   OrderProductItem, 
   CreateOrderDto,
-} from '@/src/services/orders';
+} from '@/services/orders';
 import { 
   getAllClients, 
   getClientPriceHistory, 
   ClientListItem, 
   PriceHistoryItem,
-} from '@/src/services/clients';
+} from '@/services/clients';
 
 interface CreateOrderModalProps {
   isOpen: boolean;

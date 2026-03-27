@@ -1,4 +1,4 @@
-import { EstadoPedido } from '@/src/types';
+import { EstadoPedido } from '@/types';
 
 export function cn(...classes: (string | undefined | null | false)[]): string {
   return classes.filter(Boolean).join(' ');

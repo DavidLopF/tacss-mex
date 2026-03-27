@@ -9,7 +9,7 @@ import {
   PO_STATUS_TRANSITION_RULES,
   canTransitionPO,
   getAvailablePOTransitions,
-} from '@/src/services/suppliers';
+} from '@/services/suppliers';
 
 interface ChangePOStatusMenuProps {
   currentStatus: PurchaseOrderStatus;

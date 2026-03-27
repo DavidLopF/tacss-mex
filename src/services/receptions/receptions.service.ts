@@ -1,4 +1,4 @@
-import { get, post } from '@/src/services/http-client';
+import { get, post } from '@/services/http-client';
 import type {
   PartialReceipt,
   ReceptionProgress,

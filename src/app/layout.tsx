@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Manrope, Geist_Mono } from "next/font/google";
 import { Providers } from './providers';
-import { AppShell } from '@/src/components/layout/app-shell';
+import { AppShell } from '@/components/layout/app-shell';
 import "./globals.css";
 
 const manrope = Manrope({

@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 import { Search, Plus, Edit, Trash2, UserCircle, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button, Badge } from '@/src/components/ui';
-import { formatDateTime } from '@/src/lib/utils';
+import { Button, Badge } from '@/components/ui';
+import { formatDateTime } from '@/lib/utils';
 import { CreateUserModal } from './create-user-modal';
 import { EditUserModal } from './edit-user-modal';
 import { DeleteUserModal } from './delete-user-modal';
 import { ChangeRoleModal } from './change-role-modal';
-import type { UserDetail, CreateUserDto, UpdateUserDto } from '@/src/services/users';
+import type { UserDetail, CreateUserDto, UpdateUserDto } from '@/services/users';
 
 interface UsersTableProps {
   users: UserDetail[];
@@ -16,7 +16,7 @@ interface UsersTableProps {
   onUserUpdate?: (id: number, data: UpdateUserDto) => void;
   onUserDelete?: (id: number) => void;
   onUserRoleChange?: (userId: number, roleId: number) => void;
-  onRoleCreate?: (data: import('@/src/services/users').CreateRoleDto) => Promise<import('@/src/services/users').Role | void>;
+  onRoleCreate?: (data: import('@/services/users').CreateRoleDto) => Promise<import('@/services/users').Role | void>;
   externalSearch?: string;
   onSearchChange?: (value: string) => void;
   externalPage?: number;

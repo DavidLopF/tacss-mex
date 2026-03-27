@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Pedido, EstadoPedido } from '@/src/types';
+import { Pedido, EstadoPedido } from '@/types';
 import { OrderCard } from './order-card';
-import { OrderStatusCode } from '@/src/services/orders';
+import { OrderStatusCode } from '@/services/orders';
 
 interface KanbanColumnProps {
   titulo?: string;

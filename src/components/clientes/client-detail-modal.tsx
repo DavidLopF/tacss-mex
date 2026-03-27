@@ -1,9 +1,9 @@
 'use client';
 
 import { User, FileText, Calendar, ShoppingCart, DollarSign } from 'lucide-react';
-import { Modal, Badge } from '@/src/components/ui';
-import { ClientDetail } from '@/src/services/clients';
-import { formatCurrency, formatDateTime } from '@/src/lib/utils';
+import { Modal, Badge } from '@/components/ui';
+import { ClientDetail } from '@/services/clients';
+import { formatCurrency, formatDateTime } from '@/lib/utils';
 
 interface ClientDetailModalProps {
   isOpen: boolean;

@@ -2,7 +2,7 @@
 // ── RECEPCIONES PARCIALES (Partial Receipts) ─────────────────────────
 // ══════════════════════════════════════════════════════════════════════
 
-import type { PurchaseOrderStatus } from '@/src/services/suppliers/suppliers.types';
+import type { PurchaseOrderStatus } from '@/services/suppliers/suppliers.types';
 
 // ── Item de recepción parcial ──────────────────────────────────────
 export interface PartialReceiptItem {

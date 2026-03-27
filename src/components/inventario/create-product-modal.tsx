@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Plus, Minus, X, Upload } from 'lucide-react';
-import { Modal, Button, Card, CardContent, Select } from '@/src/components/ui';
-import { Producto, ProductoVariacion } from '@/src/types';
-import { getCategories, createProduct, CategoryDto, CreateProductDto } from '@/src/services/products';
+import { Modal, Button, Card, CardContent, Select } from '@/components/ui';
+import { Producto, ProductoVariacion } from '@/types';
+import { getCategories, createProduct, CategoryDto, CreateProductDto } from '@/services/products';
 
 interface CreateProductModalProps {
   isOpen: boolean;

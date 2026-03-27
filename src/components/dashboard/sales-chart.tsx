@@ -1,11 +1,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/src/components/ui';
-import { DashboardSalesChartDay } from '@/src/services/dashboard';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui';
+import { DashboardSalesChartDay } from '@/services/dashboard';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { formatCurrency } from '@/src/lib/utils';
-import { cn } from '@/src/lib/utils';
+import { formatCurrency } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 interface SalesChartProps {
   data: DashboardSalesChartDay[];

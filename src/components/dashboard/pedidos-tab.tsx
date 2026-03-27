@@ -2,9 +2,9 @@ import { DollarSign, ShoppingCart, TrendingUp, Users } from 'lucide-react';
 import { StatCard } from './stat-card';
 import { SalesChart } from './sales-chart';
 import { RecentOrders } from './recent-orders';
-import { DashboardSummary } from '@/src/services/dashboard';
-import { formatCurrency } from '@/src/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui';
+import { DashboardSummary } from '@/services/dashboard';
+import { formatCurrency } from '@/lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
 
 interface PedidosTabProps {
   data: DashboardSummary;

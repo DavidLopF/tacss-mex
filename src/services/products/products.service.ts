@@ -1,4 +1,4 @@
-import { get, post, put } from '@/src/services/http-client';
+import { get, post, put } from '@/services/http-client';
 import {
   ProductFiltersDto,
   PaginatedProductsDto,
@@ -11,7 +11,7 @@ import {
   UpdateProductResponseDto,
   mapApiProductToProducto,
 } from './products.types';
-import { Producto } from '@/src/types';
+import { Producto } from '@/types';
 
 const BASE_PATH = '/api/products';
 

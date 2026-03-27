@@ -15,9 +15,9 @@ import {
   AlertCircle,
   X,
 } from "lucide-react";
-import { Modal, Button } from "@/src/components/ui";
-import type { UserDetail, Role, CreateRoleDto } from "@/src/services/users";
-import { getAllRoles, createRole, getRolePermissions, updateRolePermissions } from "@/src/services/users";
+import { Modal, Button } from "@/components/ui";
+import type { UserDetail, Role, CreateRoleDto } from "@/services/users";
+import { getAllRoles, createRole, getRolePermissions, updateRolePermissions } from "@/services/users";
 import { HIDDEN_MODULES } from "@/lib/hooks";
 
 // ── Metadatos visuales por moduleCode del backend ───────────────────────────
@@ -95,7 +95,7 @@ export function ChangeRoleModal({
 
   // ── Permissions tab state ──
   const [permRoleId, setPermRoleId] = useState<number | "">("");
-  const [backendModules, setBackendModules] = useState<import("@/src/services/users").RolePermission[]>([]);
+  const [backendModules, setBackendModules] = useState<import("@/services/users").RolePermission[]>([]);
   const [selectedPerms, setSelectedPerms] = useState<Set<string>>(new Set());
   const [loadingPerms, setLoadingPerms] = useState(false);
   const [permsError, setPermsError] = useState("");

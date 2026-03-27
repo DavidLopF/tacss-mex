@@ -2,7 +2,7 @@
 // FiscalDataForm — Captura de Datos Fiscales del Receptor (CFDI 4.0)
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState } from 'react';
-import { Button } from '@/src/components/ui';
+import { Button } from '@/components/ui';
 
 const TAX_REGIMES = [
   { code: '601', label: '601 – General de Ley Personas Morales' },

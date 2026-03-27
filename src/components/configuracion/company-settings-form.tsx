@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { Building2, Palette, Eye, RotateCcw } from 'lucide-react';
-import { Button } from '@/src/components/ui';
-import { DEFAULT_COMPANY_SETTINGS } from '@/src/services/company';
-import type { CompanySettings, UpdateCompanySettingsDto } from '@/src/services/company';
+import { Button } from '@/components/ui';
+import { DEFAULT_COMPANY_SETTINGS } from '@/services/company';
+import type { CompanySettings, UpdateCompanySettingsDto } from '@/services/company';
 
 interface CompanySettingsFormProps {
   settings: CompanySettings;

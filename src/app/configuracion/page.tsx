@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback } from 'react';
 import { Users, Shield, Building2 } from 'lucide-react';
-import { RolesTable, UsersTable, ConfigTableSkeleton, CompanySettingsForm } from '@/src/components/configuracion';
+import { RolesTable, UsersTable, ConfigTableSkeleton, CompanySettingsForm } from '@/components/configuracion';
 import {
   getRoles,
   createRole,
@@ -13,22 +13,22 @@ import {
   updateUser,
   deleteUser,
   changeUserRole,
-} from '@/src/services/users';
+} from '@/services/users';
 import type {
   CreateRoleDto,
   UpdateRoleDto,
   CreateUserDto,
   UpdateUserDto,
-} from '@/src/services/users';
-import { useDebounce, useToast, useCrossTabSync } from '@/src/lib/hooks';
-import { ToastContainer } from '@/src/components/ui';
-import { cn } from '@/src/lib/utils';
-import { useCompany } from '@/src/lib/company-context';
-import type { UpdateCompanySettingsDto } from '@/src/services/company';
-import { updateCompanySettings } from '@/src/services/company';
-import { PermissionGuard } from '@/src/components/layout';
-import { useConfigStore } from '@/src/stores';
-import { broadcastInvalidation } from '@/src/lib/cross-tab-sync';
+} from '@/services/users';
+import { useDebounce, useToast, useCrossTabSync } from '@/lib/hooks';
+import { ToastContainer } from '@/components/ui';
+import { cn } from '@/lib/utils';
+import { useCompany } from '@/lib/company-context';
+import type { UpdateCompanySettingsDto } from '@/services/company';
+import { updateCompanySettings } from '@/services/company';
+import { PermissionGuard } from '@/components/layout';
+import { useConfigStore } from '@/stores';
+import { broadcastInvalidation } from '@/lib/cross-tab-sync';
 
 type Tab = 'users' | 'roles' | 'company';
 

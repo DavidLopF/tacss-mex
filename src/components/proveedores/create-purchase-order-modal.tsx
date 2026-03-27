@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
-import { Modal, Button } from '@/src/components/ui';
+import { Modal, Button } from '@/components/ui';
 import {
   CreatePurchaseOrderDto,
   SupplierListItem,
-} from '@/src/services/suppliers';
-import { getAllSuppliers } from '@/src/services/suppliers/suppliers.service';
+} from '@/services/suppliers';
+import { getAllSuppliers } from '@/services/suppliers/suppliers.service';
 
 interface CreatePurchaseOrderModalProps {
   isOpen: boolean;

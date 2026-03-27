@@ -2,12 +2,12 @@
 import React, { useState, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-import { InvoiceList }       from '@/src/components/facturacion/InvoiceList';
-import { InvoiceForm }       from '@/src/components/facturacion/InvoiceForm';
-import { FiscalDataForm }    from '@/src/components/facturacion/FiscalDataForm';
-import { CFDIViewer }        from '@/src/components/facturacion/CFDIViewer';
-import { PaymentForm }       from '@/src/components/facturacion/PaymentForm';
-import { CancellationModal } from '@/src/components/facturacion/CancellationModal';
+import { InvoiceList }       from '@/components/facturacion/InvoiceList';
+import { InvoiceForm }       from '@/components/facturacion/InvoiceForm';
+import { FiscalDataForm }    from '@/components/facturacion/FiscalDataForm';
+import { CFDIViewer }        from '@/components/facturacion/CFDIViewer';
+import { PaymentForm }       from '@/components/facturacion/PaymentForm';
+import { CancellationModal } from '@/components/facturacion/CancellationModal';
 
 import {
   createPueInvoice,
@@ -18,7 +18,7 @@ import {
   createCreditNote,
   getFiscalData,
   syncInvoiceStatus,
-} from '@/src/services/invoices/invoices.service';
+} from '@/services/invoices/invoices.service';
 
 import {
   CfdiInvoice,
@@ -28,7 +28,7 @@ import {
   RequestCancellationDto,
   CreateCreditNoteDto,
   InvoiceItemInput,
-} from '@/src/services/invoices/invoices.types';
+} from '@/services/invoices/invoices.types';
 import {
   Button,
   Card,
@@ -38,8 +38,8 @@ import {
   CardTitle,
   Modal,
   ToastContainer,
-} from '@/src/components/ui';
-import { useToast } from '@/src/lib/hooks';
+} from '@/components/ui';
+import { useToast } from '@/lib/hooks';
 
 type Tab = 'list' | 'new-pue' | 'new-ppd';
 type ModalType = 'view' | 'pay' | 'cancel' | 'credit-note' | 'fiscal' | null;

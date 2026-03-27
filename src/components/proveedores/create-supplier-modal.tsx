@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Modal, Button } from '@/src/components/ui';
-import { CreateSupplierDto } from '@/src/services/suppliers';
+import { Modal, Button } from '@/components/ui';
+import { CreateSupplierDto } from '@/services/suppliers';
 
 interface CreateSupplierModalProps {
   isOpen: boolean;

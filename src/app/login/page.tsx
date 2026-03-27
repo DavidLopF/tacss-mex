@@ -2,9 +2,9 @@
 
 import { useState, useEffect, FormEvent } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/src/lib/auth-context';
-import { login as loginService } from '@/src/services/auth';
-import { useCompany } from '@/src/lib/company-context';
+import { useAuth } from '@/lib/auth-context';
+import { login as loginService } from '@/services/auth';
+import { useCompany } from '@/lib/company-context';
 import {
   Package,
   Eye,

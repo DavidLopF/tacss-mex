@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // invoices.service.ts — Capa de servicio HTTP para Facturación CFDI 4.0
 // ─────────────────────────────────────────────────────────────────────────────
-import { get, post, del, HttpError } from '@/src/services/http-client';
+import { get, post, del, HttpError } from '@/services/http-client';
 import {
   CfdiInvoice,
   CfdiCustomer,

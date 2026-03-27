@@ -1,9 +1,9 @@
 'use client';
 
 import { AlertTriangle } from 'lucide-react';
-import { Modal, Button } from '@/src/components/ui';
-import { PurchaseOrder, PURCHASE_ORDER_STATUS_LABELS } from '@/src/services/suppliers';
-import { formatCurrency } from '@/src/lib/utils';
+import { Modal, Button } from '@/components/ui';
+import { PurchaseOrder, PURCHASE_ORDER_STATUS_LABELS } from '@/services/suppliers';
+import { formatCurrency } from '@/lib/utils';
 
 interface DeletePurchaseOrderModalProps {
   isOpen: boolean;

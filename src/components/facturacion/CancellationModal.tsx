@@ -3,7 +3,7 @@
 // CancellationModal — 4 motivos SAT + UUID sustituto (motivo 01) + doble confirmación
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState, useCallback } from 'react';
-import { Button, Badge, Modal } from '@/src/components/ui';
+import { Button, Badge, Modal } from '@/components/ui';
 
 export type CancellationMotive = '01' | '02' | '03' | '04';
 

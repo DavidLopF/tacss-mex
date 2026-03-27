@@ -1,4 +1,4 @@
-import { get, put } from '@/src/services/http-client';
+import { get, put } from '@/services/http-client';
 import type { CompanySettings, UpdateCompanySettingsDto } from './company.types';
 
 const BASE_PATH = '/api/configurations';

@@ -1,6 +1,6 @@
-import { Card, CardHeader, CardTitle, CardContent, Badge } from '@/src/components/ui';
-import { DashboardRecentOrder } from '@/src/services/dashboard';
-import { formatCurrency, formatDateTime } from '@/src/lib/utils';
+import { Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui';
+import { DashboardRecentOrder } from '@/services/dashboard';
+import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { ArrowUpRight, Eye } from 'lucide-react';
 
 interface RecentOrdersProps {

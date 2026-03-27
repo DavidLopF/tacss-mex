@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { Search, Plus, Edit, Eye, Trash2, Package, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Card, Button, Badge } from '@/src/components/ui';
+import { Card, Button, Badge } from '@/components/ui';
 import { ProductDetailModal } from './product-detail-modal';
 import { CreateProductModal } from './create-product-modal';
 import { DeleteConfirmModal } from './delete-confirm-modal';
-import { Producto } from '@/src/types';
-import { formatCurrency } from '@/src/lib/utils';
-import { getProductById } from '@/src/services/products';
-import type { ApiProductDetail } from '@/src/services/products';
+import { Producto } from '@/types';
+import { formatCurrency } from '@/lib/utils';
+import { getProductById } from '@/services/products';
+import type { ApiProductDetail } from '@/services/products';
 
 interface InventoryTableProps {
   productos: Producto[];

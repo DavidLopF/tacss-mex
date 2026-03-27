@@ -1,8 +1,8 @@
 'use client';
 
 import { AlertTriangle } from 'lucide-react';
-import { Modal, Button } from '@/src/components/ui';
-import type { UserDetail } from '@/src/services/users';
+import { Modal, Button } from '@/components/ui';
+import type { UserDetail } from '@/services/users';
 
 interface DeleteUserModalProps {
   isOpen: boolean;

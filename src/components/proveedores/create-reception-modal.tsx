@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { Loader2, Package, AlertCircle, CheckCircle2, Warehouse } from 'lucide-react';
-import { Modal, Button } from '@/src/components/ui';
-import { createReception, getWarehouses } from '@/src/services/receptions';
-import type { CreateReceptionDto, CreateReceptionResponse, WarehouseListItem } from '@/src/services/receptions';
-import type { PurchaseOrder, PurchaseOrderItem } from '@/src/services/suppliers';
-import { formatDateTime } from '@/src/lib/utils';
+import { Modal, Button } from '@/components/ui';
+import { createReception, getWarehouses } from '@/services/receptions';
+import type { CreateReceptionDto, CreateReceptionResponse, WarehouseListItem } from '@/services/receptions';
+import type { PurchaseOrder, PurchaseOrderItem } from '@/services/suppliers';
+import { formatDateTime } from '@/lib/utils';
 
 interface CreateReceptionModalProps {
   isOpen: boolean;

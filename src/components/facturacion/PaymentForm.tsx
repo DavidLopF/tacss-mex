@@ -3,8 +3,8 @@
 // PaymentForm — Registro de pagos PPD + generación automática de REP (CFDI 4.0)
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState } from 'react';
-import { Button } from '@/src/components/ui';
-import { RegisterPaymentDto } from '@/src/services/invoices/invoices.types';
+import { Button } from '@/components/ui';
+import { RegisterPaymentDto } from '@/services/invoices/invoices.types';
 
 const FORMAS_PAGO = [
   { code: '01', label: '01 – Efectivo' },

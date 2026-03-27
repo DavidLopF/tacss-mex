@@ -1,4 +1,4 @@
-import { cn } from '@/src/lib/utils';
+import { cn } from '@/lib/utils';
 import { ReactNode, ButtonHTMLAttributes } from 'react';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';

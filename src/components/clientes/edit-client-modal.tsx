@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Modal, Button } from '@/src/components/ui';
-import { ClientDetail, UpdateClientDto } from '@/src/services/clients';
+import { Modal, Button } from '@/components/ui';
+import { ClientDetail, UpdateClientDto } from '@/services/clients';
 
 interface EditClientModalProps {
   isOpen: boolean;

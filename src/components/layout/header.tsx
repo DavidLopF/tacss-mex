@@ -14,8 +14,8 @@ import {
   User,
   Users,
 } from 'lucide-react';
-import { useCompany } from '@/src/lib/company-context';
-import { useAuth } from '@/src/lib/auth-context';
+import { useCompany } from '@/lib/company-context';
+import { useAuth } from '@/lib/auth-context';
 
 interface CommandAction {
   label: string;

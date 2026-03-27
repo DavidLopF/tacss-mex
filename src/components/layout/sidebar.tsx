@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { cn } from '@/src/lib/utils';
+import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
   Package,
@@ -16,9 +16,9 @@ import {
   Receipt,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useCompany } from '@/src/lib/company-context';
-import { useAuth } from '@/src/lib/auth-context';
-import { ROUTE_TO_MODULE } from '@/src/lib/hooks';
+import { useCompany } from '@/lib/company-context';
+import { useAuth } from '@/lib/auth-context';
+import { ROUTE_TO_MODULE } from '@/lib/hooks';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },

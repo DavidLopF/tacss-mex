@@ -1,4 +1,4 @@
-import { get, post, put, del, getPaginated } from '@/src/services/http-client';
+import { get, post, put, del, getPaginated } from '@/services/http-client';
 import {
   ClientListItem,
   PriceHistoryItem,

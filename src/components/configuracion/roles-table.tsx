@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { Search, Plus, Edit, Trash2, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button, Badge } from '@/src/components/ui';
+import { Button, Badge } from '@/components/ui';
 import { CreateRoleModal } from './create-role-modal';
 import { EditRoleModal } from './edit-role-modal';
 import { DeleteRoleModal } from './delete-role-modal';
-import type { Role, CreateRoleDto, UpdateRoleDto } from '@/src/services/users';
+import type { Role, CreateRoleDto, UpdateRoleDto } from '@/services/users';
 
 interface RolesTableProps {
   roles: Role[];

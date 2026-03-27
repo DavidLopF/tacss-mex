@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, Button } from '@/src/components/ui';
+import { Card, Button } from '@/components/ui';
 import {
   Search,
   Plus,
@@ -21,20 +21,20 @@ import {
   ChevronUp,
   Percent,
 } from 'lucide-react';
-import { formatCurrency } from '@/src/lib/utils';
-import { useDebounce } from '@/src/lib/hooks';
-import { useCompany } from '@/src/lib/company-context';
+import { formatCurrency } from '@/lib/utils';
+import { useDebounce } from '@/lib/hooks';
+import { useCompany } from '@/lib/company-context';
 import {
   CreatePurchaseOrderDto,
   SupplierListItem,
   SupplierProductItem,
-} from '@/src/services/suppliers';
-import { getAllSuppliers, getSupplierProducts } from '@/src/services/suppliers/suppliers.service';
+} from '@/services/suppliers';
+import { getAllSuppliers, getSupplierProducts } from '@/services/suppliers/suppliers.service';
 import {
   getOrderProducts,
   OrderProductItem,
   OrderProductsPaginatedResponse,
-} from '@/src/services/orders';
+} from '@/services/orders';
 
 interface CreatePurchaseOrderFullscreenProps {
   isOpen: boolean;

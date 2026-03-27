@@ -1,16 +1,16 @@
 import { Building2, ShoppingBag, DollarSign, Clock, FileText } from 'lucide-react';
 import { StatCard } from './stat-card';
-import { Card, CardHeader, CardTitle, CardContent } from '@/src/components/ui';
-import { formatCurrency, formatDate, cn } from '@/src/lib/utils';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui';
+import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import {
   DashboardComprasSummary,
   DashboardRecentPurchaseOrder,
-} from '@/src/services/dashboard';
+} from '@/services/dashboard';
 import {
   PURCHASE_ORDER_STATUS_LABELS,
   PURCHASE_ORDER_STATUS_COLORS,
   PurchaseOrderStatus,
-} from '@/src/services/suppliers';
+} from '@/services/suppliers';
 
 interface ComprasTabProps {
   data: DashboardComprasSummary | null;

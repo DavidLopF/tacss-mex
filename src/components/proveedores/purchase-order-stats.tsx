@@ -1,9 +1,9 @@
 'use client';
 
 import { ShoppingCart, DollarSign, FileText, Send, Package } from 'lucide-react';
-import { StatCard } from '@/src/components/dashboard';
-import { PurchaseOrderStatistics } from '@/src/services/suppliers';
-import { formatCurrency } from '@/src/lib/utils';
+import { StatCard } from '@/components/dashboard';
+import { PurchaseOrderStatistics } from '@/services/suppliers';
+import { formatCurrency } from '@/lib/utils';
 
 interface PurchaseOrderStatsProps {
   statistics?: PurchaseOrderStatistics;

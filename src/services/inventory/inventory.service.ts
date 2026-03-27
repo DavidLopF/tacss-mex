@@ -1,4 +1,4 @@
-import { get } from '@/src/services/http-client';
+import { get } from '@/services/http-client';
 import { InventoryItem, InventoryFiltersDto } from './inventory.types';
 
 const BASE_PATH = '/api/inventory';

@@ -4,7 +4,7 @@
 // PDF preview · descarga XML · UUID copy · estado · acciones
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState, useCallback } from 'react';
-import { Button, Badge } from '@/src/components/ui';
+import { Button, Badge } from '@/components/ui';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export type InvoiceStatus = 'DRAFT' | 'STAMPED' | 'CANCEL_PENDING' | 'CANCELLED' | 'PAID' | 'ERROR';

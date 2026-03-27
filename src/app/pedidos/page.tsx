@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useShallow } from 'zustand/react/shallow';
 import { Plus, Search, Grid3X3, List, LayoutGrid } from 'lucide-react';
-import { Button, Card } from '@/src/components/ui';
-import { OrdersBoard, OrdersTable, OrdersKanban, OrderDetailModal, CreateOrderModal } from '@/src/components/pedidos';
-import { Pedido, EstadoPedido } from '@/src/types';
+import { Button, Card } from '@/components/ui';
+import { OrdersBoard, OrdersTable, OrdersKanban, OrderDetailModal, CreateOrderModal } from '@/components/pedidos';
+import { Pedido, EstadoPedido } from '@/types';
 import {
   getOrders,
   OrderStatus,
@@ -16,11 +16,11 @@ import {
   canTransitionToStatus,
   createOrder,
   CreateOrderDto,
-} from '@/src/services';
-import { useToast, useCrossTabSync } from '@/src/lib/hooks';
-import { PermissionGuard } from '@/src/components/layout';
-import { useOrdersStore, useCfdiStore } from '@/src/stores';
-import { broadcastInvalidation } from '@/src/lib/cross-tab-sync';
+} from '@/services';
+import { useToast, useCrossTabSync } from '@/lib/hooks';
+import { PermissionGuard } from '@/components/layout';
+import { useOrdersStore, useCfdiStore } from '@/stores';
+import { broadcastInvalidation } from '@/lib/cross-tab-sync';
 
 // Mapeo de estados del backend a estados del frontend
 const mapEstadoBackendToFrontend = (statusCode: string): EstadoPedido => {

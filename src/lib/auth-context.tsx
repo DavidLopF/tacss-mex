@@ -9,8 +9,8 @@ import {
   ReactNode,
 } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import type { LoginResponse, ModulePermission } from '@/src/services/auth';
-import { logout as logoutService } from '@/src/services/auth';
+import type { LoginResponse, ModulePermission } from '@/services/auth';
+import { logout as logoutService } from '@/services/auth';
 
 const ACCESS_TOKEN_KEY = 'crm-auth-access-token';
 const REFRESH_TOKEN_KEY = 'crm-auth-refresh-token';

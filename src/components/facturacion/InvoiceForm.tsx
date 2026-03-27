@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Badge, Button } from '@/src/components/ui';
-import { CreateInvoiceDto, InvoiceItemInput, TaxConfig, MetodoPago } from '@/src/services/invoices/invoices.types';
+import { Badge, Button } from '@/components/ui';
+import { CreateInvoiceDto, InvoiceItemInput, TaxConfig, MetodoPago } from '@/services/invoices/invoices.types';
 
 const USO_CFDI = [
   { code: 'G01', label: 'G01 - Adquisicion de mercancias' },

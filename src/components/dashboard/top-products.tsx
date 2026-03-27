@@ -1,6 +1,6 @@
-import { Card, CardHeader, CardTitle, CardContent } from '@/src/components/ui';
-import { DashboardTopProduct } from '@/src/services/dashboard';
-import { formatCurrency } from '@/src/lib/utils';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui';
+import { DashboardTopProduct } from '@/services/dashboard';
+import { formatCurrency } from '@/lib/utils';
 
 interface TopProductsProps {
   productos: DashboardTopProduct[];

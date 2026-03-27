@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { connectSocket, disconnectSocket } from '@/src/lib/socket-client';
+import { connectSocket, disconnectSocket } from '@/lib/socket-client';
 
 /**
  * Hook que inicializa la conexión SSE cuando el usuario

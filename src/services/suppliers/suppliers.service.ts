@@ -1,4 +1,4 @@
-import { get, post, put, del, getPaginated, patch } from '@/src/services/http-client';
+import { get, post, put, del, getPaginated, patch } from '@/services/http-client';
 import {
   SupplierDetail,
   SupplierListItem,

@@ -1,5 +1,5 @@
-import { Card, CardHeader, CardTitle, CardContent, Badge } from '@/src/components/ui';
-import { DashboardLowStockProduct } from '@/src/services/dashboard';
+import { Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui';
+import { DashboardLowStockProduct } from '@/services/dashboard';
 import { AlertTriangle } from 'lucide-react';
 
 interface LowStockAlertProps {

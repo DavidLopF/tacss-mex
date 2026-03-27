@@ -1,5 +1,5 @@
-import { Card, CardContent } from '@/src/components/ui';
-import { cn } from '@/src/lib/utils';
+import { Card, CardContent } from '@/components/ui';
+import { cn } from '@/lib/utils';
 import { Area, AreaChart, ResponsiveContainer } from 'recharts';
 import { ArrowDownRight, ArrowUpRight, LucideIcon } from 'lucide-react';
 

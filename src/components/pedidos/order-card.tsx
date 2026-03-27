@@ -1,12 +1,12 @@
 'use client';
 
 import { Calendar, User, Package, FileText } from 'lucide-react';
-import { Badge } from '@/src/components/ui';
-import { Pedido } from '@/src/types';
-import { formatCurrency, formatDateTime } from '@/src/lib/utils';
+import { Badge } from '@/components/ui';
+import { Pedido } from '@/types';
+import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { ChangeStatusMenu } from './change-status-menu';
-import { OrderStatusCode } from '@/src/services/orders';
-import { useCfdiStore } from '@/src/stores';
+import { OrderStatusCode } from '@/services/orders';
+import { useCfdiStore } from '@/stores';
 
 interface OrderCardProps {
   pedido: Pedido;

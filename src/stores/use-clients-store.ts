@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { ClientDetail, ClientStatistics } from '@/src/services/clients';
+import type { ClientDetail, ClientStatistics } from '@/services/clients';
 
 // ══════════════════════════════════════════════════════════════════════
 // ── Clients Store (Zustand) ───────────────────────────────────────────

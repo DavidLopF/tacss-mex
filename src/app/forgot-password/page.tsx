@@ -3,8 +3,8 @@
 import { useState, FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCompany } from '@/src/lib/company-context';
-import { forgotPassword } from '@/src/services/auth';
+import { useCompany } from '@/lib/company-context';
+import { forgotPassword } from '@/services/auth';
 import {
   Mail,
   ArrowLeft,
