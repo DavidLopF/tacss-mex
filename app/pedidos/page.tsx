@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useShallow } from 'zustand/react/shallow';
 import { Plus, Search } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
@@ -87,6 +88,8 @@ const mapOrdersToPedidos = (orderStatuses: OrderStatus[]): Pedido[] => {
 };
 
 export default function PedidosPage() {
+  const router = useRouter();
+
   // ── Data & UI state (single shallow subscription) ──
   const { pedidos, loading, searchTerm } = useOrdersStore(useShallow((s) => ({
     pedidos: s.pedidos,
@@ -104,6 +107,27 @@ export default function PedidosPage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const toast = useToast();
+
+  /**
+   * Navega a /facturacion con el contexto del pedido en la URL.
+   * La página de facturación lee estos params y pre-rellena el formulario.
+   */
+  const handleEmitirCFDI = useCallback((pedido: Pedido) => {
+    const params = new URLSearchParams({
+      saleId:    pedido.id,
+      clientId:  pedido.clienteId,
+      saleCode:  pedido.numero,
+      // Serializa las líneas del pedido para pre-rellenar los conceptos
+      items: JSON.stringify(
+        pedido.lineas.map((l) => ({
+          description: [l.productoNombre, l.variacionNombre].filter(Boolean).join(' — '),
+          quantity:    l.cantidad,
+          unitPrice:   l.precioUnitario,
+        }))
+      ),
+    });
+    router.push(`/facturacion?${params.toString()}`);
+  }, [router]);
 
   const loadOrders = useCallback(async () => {
     try {
@@ -321,6 +345,7 @@ export default function PedidosPage() {
         onEdit={(pedido) => {
           console.log('Edit order:', pedido);
         }}
+        onEmitirCFDI={handleEmitirCFDI}
       />
 
       {/* Modal de Creación */}

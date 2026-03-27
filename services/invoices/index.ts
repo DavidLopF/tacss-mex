@@ -1,0 +1,33 @@
+export {
+  upsertFiscalData,
+  getFiscalData,
+  getInvoices,
+  getInvoiceById,
+  createPueInvoice,
+  createPpdInvoice,
+  registerPayment,
+  getPayments,
+  getCancellationMotives,
+  requestCancellation,
+  createCreditNote,
+  getCreditNotes,
+  syncInvoiceStatus,
+} from './invoices.service';
+
+export type {
+  InvoiceStatus,
+  InvoiceType,
+  MetodoPago,
+  CfdiCustomer,
+  InvoiceItem,
+  CfdiInvoice,
+  TaxConfig,
+  InvoiceItemInput,
+  UpsertFiscalDataDto,
+  CreateInvoiceDto,
+  RegisterPaymentDto,
+  RequestCancellationDto,
+  CreateCreditNoteDto,
+  PaginatedInvoicesResponse,
+  InvoiceFilters,
+} from './invoices.types';

@@ -54,6 +54,19 @@ interface ApiErrorResponse {
 
 type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
+// ── Error HTTP tipado con status code ────────────────────────────────────────
+// Necesario para que los servicios puedan hacer `if (err.status === 404)` etc.
+export class HttpError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+    public readonly body?: unknown,
+  ) {
+    super(message);
+    this.name = 'HttpError';
+  }
+}
+
 // ── Token helpers (shared with auth-context via localStorage) ────────────────
 
 function getAccessToken(): string | null {
@@ -174,19 +187,29 @@ async function request<T>(
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new Event('auth-session-expired'));
       }
-      throw new Error('Sesión expirada. Inicia sesión nuevamente.');
+      throw new HttpError(401, 'Sesión expirada. Inicia sesión nuevamente.');
     }
   }
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`HTTP ${res.status}: ${text}`);
+    let body: unknown;
+    try { body = await res.json(); } catch { body = await res.text().catch(() => ''); }
+    // Extraer mensaje del backend si viene en formato { success: false, error: { message } }
+    const backendMsg =
+      (body as { error?: { message?: string } })?.error?.message ||
+      (body as { message?: string })?.message ||
+      `HTTP ${res.status}`;
+    throw new HttpError(res.status, backendMsg, body);
   }
 
   const json: ApiResponse<T> = await res.json();
 
   if (!json.success) {
-    throw new Error((json as ApiErrorResponse).message || 'Error desconocido');
+    throw new HttpError(
+      400,
+      (json as ApiErrorResponse).message || 'Error desconocido',
+      json,
+    );
   }
 
   return (json as ApiSuccessResponse<T>).data;
@@ -212,9 +235,13 @@ export function patch<T>(path: string, body?: unknown, params?: Record<string, u
   return request<T>(path, { method: 'PATCH', body: body ? JSON.stringify(body) : undefined }, params);
 }
 
-/** DELETE request */
-export function del<T>(path: string, params?: Record<string, unknown>): Promise<T> {
-  return request<T>(path, { method: 'DELETE' }, params);
+/** DELETE request — body opcional para endpoints que requieren payload (ej: cancelación con motivo) */
+export function del<T>(path: string, body?: unknown, params?: Record<string, unknown>): Promise<T> {
+  return request<T>(
+    path,
+    { method: 'DELETE', body: body ? JSON.stringify(body) : undefined },
+    params,
+  );
 }
 
 /** Resultado paginado genérico */
@@ -254,7 +281,7 @@ export async function getPaginated<T>(
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new Event('auth-session-expired'));
       }
-      throw new Error('Sesión expirada. Inicia sesión nuevamente.');
+      throw new HttpError(401, 'Sesión expirada. Inicia sesión nuevamente.');
     }
   }
 

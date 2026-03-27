@@ -35,6 +35,8 @@ interface OrderDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   onEdit?: (pedido: Pedido) => void;
+  /** Emitir CFDI — disponible cuando el pedido está en estado enviado o pagado */
+  onEmitirCFDI?: (pedido: Pedido) => void;
 }
 
 interface EstadoConfigItem {
@@ -92,7 +94,7 @@ const estadoConfig: Record<string, EstadoConfigItem> = {
 
 const pasos = ['cotizado', 'transmitido', 'en_curso', 'enviado'] as const;
 
-export function OrderDetailModal({ pedido, isOpen, onClose, onEdit }: OrderDetailModalProps) {
+export function OrderDetailModal({ pedido, isOpen, onClose, onEdit, onEmitirCFDI }: OrderDetailModalProps) {
   const [isProductsOpen, setIsProductsOpen] = useState(true);
   const [isClientOpen, setIsClientOpen] = useState(true);
   const [isInfoOpen, setIsInfoOpen] = useState(true);
@@ -771,6 +773,16 @@ export function OrderDetailModal({ pedido, isOpen, onClose, onEdit }: OrderDetai
               <Button onClick={handleEdit} className="flex items-center gap-2">
                 <Edit className="w-4 h-4" />
                 Editar Pedido
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            )}
+            {(isEnviado || pedido.estado === 'pagado') && onEmitirCFDI && (
+              <Button
+                onClick={() => onEmitirCFDI(pedido)}
+                className="flex items-center gap-2 bg-blue-700 hover:bg-blue-800"
+              >
+                <Receipt className="w-4 h-4" />
+                Emitir CFDI
                 <ArrowRight className="w-4 h-4" />
               </Button>
             )}

@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   Menu,
   Truck,
+  Receipt,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useCompany } from '@/lib/company-context';
@@ -25,6 +26,7 @@ const navigation = [
   { name: 'Pedidos', href: '/pedidos', icon: ShoppingCart },
   { name: 'Clientes', href: '/clientes', icon: Users },
   { name: 'Proveedores', href: '/proveedores', icon: Truck },
+  { name: 'Facturación', href: '/facturacion', icon: Receipt },
   { name: 'Configuración', href: '/configuracion', icon: Settings },
 ];
 
