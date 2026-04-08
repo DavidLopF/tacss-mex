@@ -51,7 +51,7 @@ export interface MovimientoInventario {
   createdAt: Date;
 }
 
-export type EstadoPedido = 'cotizado' | 'transmitido' | 'en_curso' | 'enviado' | 'cancelado';
+export type EstadoPedido = 'cotizado' | 'transmitido' | 'en_curso' | 'enviado' | 'cancelado' | 'pagado';
 
 export interface PedidoLinea {
   id: string;

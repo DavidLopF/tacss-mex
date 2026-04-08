@@ -5,11 +5,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run dev      # Start development server
+npm run dev      # Start development server (uses --webpack flag, not Turbopack)
 npm run build    # Production build
 npm run start    # Start production server
 npm run lint     # Run ESLint
 ```
+
+Requires `NEXT_PUBLIC_API_URL` env var pointing to the backend (e.g. `http://localhost:3001`). Without it, API calls resolve to the same origin.
 
 No test framework is configured.
 
@@ -30,9 +32,11 @@ types/        → Shared TypeScript types
 
 ### State Management (Zustand)
 
-Each domain has a store in `stores/`: `useClientsStore`, `useOrdersStore`, `useInventoryStore`, `useSuppliersStore`, `usePurchaseOrdersStore`, `useConfigStore`. All are exported from `stores/index.ts`.
+Each domain has a store in `stores/`: `useClientsStore`, `useOrdersStore`, `useInventoryStore`, `useSuppliersStore`, `usePurchaseOrdersStore`, `useConfigStore`, `useCfdiStore`. All are exported from `stores/index.ts`.
 
 Store pattern: data arrays + pagination/filter fields + loading flags + bulk setters (`setClients`) + granular mutations (`upsertClient`, `patchClient`, `removeClient`). Pages use **shallow subscriptions** to avoid unnecessary re-renders.
+
+`useCfdiStore` is the exception: it uses Zustand `persist` middleware (localStorage-backed) to track CFDI invoice status per order across page reloads.
 
 ### API Services
 
@@ -62,7 +66,7 @@ Pages subscribe via `useCrossTabSync(modules, reloadFn)` to re-fetch when remote
 ### Key Utilities
 
 - `lib/utils.ts`: `cn()` for conditional classes, `formatCurrency()` (MXN), `formatDate()` / `formatDateTime()` (Spanish), `getEstadoColor()`, `getEstadoLabel()`
-- `lib/hooks.ts`: `useDebounce`, `useToast`, `usePermissions`, `useCrossTabSync`
+- `lib/hooks.ts`: re-exports from `lib/hooks/` — `useDebounce`, `useToast`, `usePermissions`, `useCrossTabSync`, `useSocketInit`
 
 ### Routing & Layout
 
@@ -75,6 +79,8 @@ Pages subscribe via `useCrossTabSync(modules, reloadFn)` to re-fetch when remote
 
 Core types in `types/index.ts`: `User`, `Producto`, `ProductoVariacion`, `Pedido`, `Cliente`, `MovimientoInventario`, `DashboardStats`.
 
+The `facturacion` module (`app/facturacion/`, `services/invoices/`) handles CFDI 4.0 Mexican electronic invoicing — fiscal data (RFC, razón social), invoice creation, PPD payment registration (REP), and cancellations.
+
 Status enums: `EstadoPedido` (`cotizado | transmitido | en_curso | enviado | cancelado`), `TipoMovimiento` (`reserva | venta | cancelacion | ajuste | entrada`), `UserRole` (`admin | vendedor`).
 
 ### Notable Libraries
@@ -86,3 +92,5 @@ Status enums: `EstadoPedido` (`cotizado | transmitido | en_curso | enviado | can
 | lucide-react | Icons |
 | jspdf | PDF generation |
 | tailwindcss 4 | Styling (via `@tailwindcss/postcss`) |
+
+Product images are served from `tacs-crm-bucket.s3.us-east-1.amazonaws.com` (configured in `next.config.ts` `remotePatterns`).

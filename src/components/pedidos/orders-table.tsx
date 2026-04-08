@@ -41,6 +41,7 @@ const ESTADO_COLORS: Record<EstadoPedido, { bg: string; text: string; badge: str
   en_curso: { bg: 'bg-orange-50', text: 'text-orange-700', badge: 'warning' },
   enviado: { bg: 'bg-cyan-50', text: 'text-cyan-700', badge: 'default' },
   cancelado: { bg: 'bg-red-50', text: 'text-red-700', badge: 'danger' },
+  pagado: { bg: 'bg-green-50', text: 'text-green-700', badge: 'success' },
 };
 
 export function OrdersTable({ pedidos, onOrderClick, onStatusChange, onEmitirCFDI }: OrdersTableProps) {

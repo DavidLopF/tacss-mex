@@ -32,6 +32,7 @@ const STATUS_ORDER: Record<EstadoPedido, number> = {
   cotizado: 3,
   enviado: 4,
   cancelado: 5,
+  pagado: 6,
 };
 
 export function OrdersBoard({ pedidos, onOrderClick, onStatusChange }: OrdersBoardProps) {

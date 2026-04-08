@@ -45,6 +45,7 @@ export function getEstadoColor(estado: EstadoPedido): string {
     en_curso: 'bg-orange-100 text-orange-700',
     enviado: 'bg-cyan-100 text-cyan-700',
     cancelado: 'bg-red-100 text-red-700',
+    pagado: 'bg-green-100 text-green-700',
   };
   return colors[estado];
 }
@@ -56,6 +57,7 @@ export function getEstadoLabel(estado: EstadoPedido): string {
     en_curso: 'En Curso',
     enviado: 'Enviado',
     cancelado: 'Cancelado',
+    pagado: 'Pagado',
   };
   return labels[estado];
 }
