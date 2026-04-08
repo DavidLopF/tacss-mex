@@ -11,6 +11,8 @@ interface ModalProps {
   children: ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
   className?: string;
+  /** Removes inner padding and scroll so the child can own the full layout */
+  noPadding?: boolean;
 }
 
 const sizeStyles = {
@@ -22,7 +24,7 @@ const sizeStyles = {
   full: 'max-w-[95vw]',
 };
 
-export function Modal({ isOpen, onClose, title, children, size = 'lg', className }: ModalProps) {
+export function Modal({ isOpen, onClose, title, children, size = 'lg', className, noPadding }: ModalProps) {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -56,6 +58,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'lg', className
             className={cn(
               'pointer-events-auto relative w-full overflow-hidden rounded-lg bg-white text-left shadow-xl sm:my-8',
               'animate-slideUp',
+              noPadding && 'flex flex-col max-h-[90vh]',
               sizeStyles[size],
               className
             )}
@@ -82,8 +85,10 @@ export function Modal({ isOpen, onClose, title, children, size = 'lg', className
             )}
             
             <div className={cn(
-              'max-h-[calc(100vh-200px)] overflow-y-auto',
-              title ? 'px-6 py-4' : 'px-6 py-5'
+              noPadding
+                ? 'flex-1 overflow-hidden'
+                : 'max-h-[calc(100vh-200px)] overflow-y-auto',
+              !noPadding && (title ? 'px-6 py-4' : 'px-6 py-5')
             )}>
               {children}
             </div>

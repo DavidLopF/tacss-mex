@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useShallow } from 'zustand/react/shallow';
 import { Plus, Search, Grid3X3, List, LayoutGrid } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
@@ -90,6 +90,7 @@ const mapOrdersToPedidos = (orderStatuses: OrderStatus[]): Pedido[] => {
 
 export default function PedidosPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // ── Data & UI state (single shallow subscription) ──
   const { pedidos, loading, searchTerm } = useOrdersStore(useShallow((s) => ({
@@ -162,6 +163,19 @@ export default function PedidosPage() {
   useCrossTabSync('orders', () => {
     loadOrders();
   });
+
+  // ── Auto-abrir pedido cuando viene ?order=ID desde el dashboard ──
+  useEffect(() => {
+    const orderId = searchParams.get('order');
+    if (!orderId || loading || pedidos.length === 0) return;
+    const pedido = pedidos.find((p) => p.id === orderId);
+    if (pedido) {
+      setSelectedOrder(pedido);
+      setIsDetailModalOpen(true);
+      // Limpiar el param de la URL sin recargar
+      router.replace('/pedidos', { scroll: false });
+    }
+  }, [pedidos, loading, searchParams, router]);
 
   const handleOrderClick = (pedido: Pedido) => {
     setSelectedOrder(pedido);

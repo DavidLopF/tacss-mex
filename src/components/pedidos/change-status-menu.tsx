@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { MoreVertical, Check, X } from 'lucide-react';
 import {
   OrderStatusCode,
@@ -17,6 +18,29 @@ interface ChangeStatusMenuProps {
 export function ChangeStatusMenu({ currentStatusCode, onChangeStatus }: ChangeStatusMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isChanging, setIsChanging] = useState(false);
+  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  // Recalculate position on open and on scroll/resize
+  useEffect(() => {
+    if (!isOpen || !buttonRef.current) return;
+
+    const updatePos = () => {
+      const rect = buttonRef.current!.getBoundingClientRect();
+      setMenuPos({
+        top: rect.bottom + window.scrollY + 4,
+        right: window.innerWidth - rect.right,
+      });
+    };
+
+    updatePos();
+    window.addEventListener('scroll', updatePos, true);
+    window.addEventListener('resize', updatePos);
+    return () => {
+      window.removeEventListener('scroll', updatePos, true);
+      window.removeEventListener('resize', updatePos);
+    };
+  }, [isOpen]);
 
   const availableTransitions = getAvailableTransitions(currentStatusCode);
 
@@ -69,6 +93,7 @@ export function ChangeStatusMenu({ currentStatusCode, onChangeStatus }: ChangeSt
   return (
     <div className="relative">
       <button
+        ref={buttonRef}
         onClick={(e) => {
           e.stopPropagation();
           setIsOpen(!isOpen);
@@ -80,16 +105,16 @@ export function ChangeStatusMenu({ currentStatusCode, onChangeStatus }: ChangeSt
         <MoreVertical className="w-4 h-4 text-gray-500" />
       </button>
 
-      {isOpen && (
+      {isOpen && typeof document !== 'undefined' && createPortal(
         <>
           {/* Overlay para cerrar al hacer clic fuera */}
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setIsOpen(false)}
-          />
+          <div className="fixed inset-0 z-[9998]" onClick={() => setIsOpen(false)} />
 
-          {/* Menú desplegable */}
-          <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[200px] z-20">
+          {/* Menú desplegable — fuera del overflow del table */}
+          <div
+            className="fixed z-[9999] bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[200px]"
+            style={{ top: menuPos.top, right: menuPos.right }}
+          >
             <div className="px-3 py-2 border-b border-gray-100">
               <p className="text-xs font-medium text-gray-500">Cambiar estado a:</p>
             </div>
@@ -102,9 +127,7 @@ export function ChangeStatusMenu({ currentStatusCode, onChangeStatus }: ChangeSt
                   handleStatusChange(statusCode);
                 }}
                 disabled={isChanging}
-                className={`w-full px-3 py-2 text-left text-sm font-medium transition-colors flex items-center justify-between ${getStatusColor(
-                  statusCode
-                )} disabled:opacity-50`}
+                className={`w-full px-3 py-2 text-left text-sm font-medium transition-colors flex items-center justify-between ${getStatusColor(statusCode)} disabled:opacity-50`}
               >
                 <span>{getStatusLabel(statusCode)}</span>
                 <Check className="w-4 h-4" />
@@ -124,7 +147,8 @@ export function ChangeStatusMenu({ currentStatusCode, onChangeStatus }: ChangeSt
               </button>
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   );

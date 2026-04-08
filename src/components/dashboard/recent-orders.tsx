@@ -1,7 +1,8 @@
+import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui';
 import { DashboardRecentOrder } from '@/services/dashboard';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
-import { ArrowUpRight, Eye } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 
 interface RecentOrdersProps {
   pedidos: DashboardRecentOrder[];
@@ -51,8 +52,9 @@ export function RecentOrders({ pedidos }: RecentOrdersProps) {
         )}
 
         {pedidos.map((pedido) => (
-          <div
+          <Link
             key={pedido.id}
+            href={`/pedidos?order=${pedido.id}`}
             className="group flex flex-col gap-4 rounded-2xl border border-gray-200/80 bg-white px-4 py-4 transition-all hover:-translate-y-0.5 hover:border-gray-300/80 hover:shadow-[0_14px_28px_rgba(15,23,42,0.1)] md:flex-row md:items-center md:justify-between"
           >
             <div className="flex items-center gap-3">
@@ -74,24 +76,13 @@ export function RecentOrders({ pedidos }: RecentOrdersProps) {
                 </Badge>
               </div>
 
-              <div className="flex items-center gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
-                <button
-                  type="button"
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
-                  aria-label={`Ver pedido ${pedido.code}`}
-                >
-                  <Eye className="h-4 w-4" />
-                </button>
-                <a
-                  href="/pedidos"
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
-                  aria-label="Ir a pedidos"
-                >
+              <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors group-hover:bg-gray-100 group-hover:text-gray-900">
                   <ArrowUpRight className="h-4 w-4" />
-                </a>
+                </span>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </CardContent>
     </Card>

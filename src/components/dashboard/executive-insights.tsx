@@ -1,7 +1,8 @@
+import Link from 'next/link';
 import { Badge, Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
 import { DashboardComprasSummary, DashboardSummary } from '@/services/dashboard';
 import { cn, formatCurrency, formatDateTime } from '@/lib/utils';
-import { AlertTriangle, ArrowDown, ArrowUp, Boxes, ClipboardList, FileWarning, Users } from 'lucide-react';
+import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpRight, Boxes, ClipboardList, FileWarning, Users } from 'lucide-react';
 
 interface ExecutiveInsightsProps {
   dashboardData: DashboardSummary | null;
@@ -95,6 +96,7 @@ export function ExecutiveInsights({ dashboardData, comprasData, dashboardLoading
       amount: formatCurrency(order.total),
       status: order.status,
       type: 'Pedido',
+      href: `/pedidos?order=${order.id}`,
     })),
     ...(comprasData?.recentOrders ?? []).map((order) => ({
       id: `po-${order.id}`,
@@ -104,6 +106,7 @@ export function ExecutiveInsights({ dashboardData, comprasData, dashboardLoading
       amount: formatCurrency(order.total),
       status: order.status,
       type: 'Compra',
+      href: `/proveedores?po=${order.id}`,
     })),
   ]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -198,20 +201,24 @@ export function ExecutiveInsights({ dashboardData, comprasData, dashboardLoading
             )}
 
             {activityFeed.map((item) => (
-              <div
+              <Link
                 key={item.id}
-                className="flex items-center justify-between rounded-2xl border border-gray-200/80 bg-[#fbfcf8] px-4 py-3"
+                href={item.href}
+                className="group flex items-center justify-between rounded-2xl border border-gray-200/80 bg-[#fbfcf8] px-4 py-3 transition-all hover:border-gray-300 hover:bg-white hover:shadow-sm"
               >
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">{item.title}</p>
-                  <p className="text-xs text-gray-500">{item.type} - {item.subtitle}</p>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-semibold text-gray-900">{item.title}</p>
+                    <ArrowUpRight className="w-3.5 h-3.5 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                  </div>
+                  <p className="text-xs text-gray-500">{item.type} · {item.subtitle}</p>
                   <p className="text-xs text-gray-400">{formatDateTime(item.date)}</p>
                 </div>
-                <div className="text-right">
+                <div className="text-right flex-shrink-0 ml-4">
                   <p className="text-sm font-semibold text-gray-900">{item.amount}</p>
                   <span className="text-xs text-gray-500">{item.status}</span>
                 </div>
-              </div>
+              </Link>
             ))}
 
             <div className="rounded-2xl border border-gray-200/70 bg-white px-4 py-3">
