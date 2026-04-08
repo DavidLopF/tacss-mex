@@ -15,6 +15,7 @@ import {
   ORDER_STATUS_LABELS,
   canTransitionToStatus,
   createOrder,
+  updateOrder,
   CreateOrderDto,
 } from '@/services';
 import { useToast, useCrossTabSync } from '@/lib/hooks';
@@ -106,6 +107,8 @@ export default function PedidosPage() {
   const [selectedOrder, setSelectedOrder] = useState<Pedido | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingOrder, setEditingOrder] = useState<Pedido | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'tabla' | 'cards' | 'kanban'>('tabla');
   const toast = useToast();
   const markAsBilled = useCfdiStore((s) => s.markAsBilled);
@@ -182,6 +185,22 @@ export default function PedidosPage() {
         error instanceof Error
           ? error.message
           : 'Error al crear el pedido'
+      );
+    }
+  };
+
+  const handleEditOrder = async (dto: CreateOrderDto) => {
+    if (!editingOrder) return;
+    try {
+      await updateOrder(parseInt(editingOrder.id), dto);
+      toast.success('Pedido actualizado exitosamente');
+      setIsEditModalOpen(false);
+      setEditingOrder(null);
+      await loadOrders();
+      broadcastInvalidation(['orders', 'inventory']);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Error al actualizar el pedido'
       );
     }
   };
@@ -404,7 +423,9 @@ export default function PedidosPage() {
         isOpen={isDetailModalOpen}
         onClose={handleCloseDetailModal}
         onEdit={(pedido) => {
-          console.log('Edit order:', pedido);
+          setEditingOrder(pedido);
+          setIsDetailModalOpen(false);
+          setIsEditModalOpen(true);
         }}
         onEmitirCFDI={handleEmitirCFDI}
       />
@@ -414,6 +435,17 @@ export default function PedidosPage() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSave={handleCreateOrder}
+      />
+
+      {/* Modal de Edición */}
+      <CreateOrderModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingOrder(null);
+        }}
+        onSave={handleEditOrder}
+        editPedido={editingOrder ?? undefined}
       />
     </main>
     </PermissionGuard>

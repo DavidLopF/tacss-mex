@@ -58,6 +58,14 @@ export async function createOrder(dto: CreateOrderDto): Promise<Order> {
 }
 
 /**
+ * Actualiza un pedido existente (cliente, ítems, moneda)
+ * PUT /api/orders/:orderId
+ */
+export async function updateOrder(orderId: number, dto: CreateOrderDto): Promise<Order> {
+  return put<Order>(`/api/orders/${orderId}`, dto);
+}
+
+/**
  * Cambia el estado de un pedido
  * PUT /api/orders/change-status/:orderId
  */

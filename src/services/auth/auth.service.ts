@@ -13,11 +13,25 @@ function getBaseUrl(): string {
  * Usa fetch directamente para evitar ciclos al hacer refresh dentro del http-client.
  */
 async function authRequest<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(`${getBaseUrl()}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${getBaseUrl()}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error('No se pudo conectar con el servidor. Verifica tu conexión.');
+  }
+
+  const contentType = res.headers.get('content-type') ?? '';
+  if (!contentType.includes('application/json')) {
+    throw new Error(
+      res.ok
+        ? 'El servidor respondió en un formato inesperado.'
+        : `Error del servidor (${res.status}). Intenta de nuevo más tarde.`,
+    );
+  }
 
   const json = await res.json();
 

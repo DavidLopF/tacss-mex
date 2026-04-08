@@ -22,22 +22,25 @@ import {
 import { formatCurrency } from '@/lib/utils';
 import { useDebounce } from '@/lib/hooks';
 import { useCompany } from '@/lib/company-context';
-import { 
-  getOrderProducts, 
-  OrderProductItem, 
+import {
+  getOrderProducts,
+  OrderProductItem,
   CreateOrderDto,
 } from '@/services/orders';
-import { 
-  getAllClients, 
-  getClientPriceHistory, 
-  ClientListItem, 
+import {
+  getAllClients,
+  getClientPriceHistory,
+  ClientListItem,
   PriceHistoryItem,
 } from '@/services/clients';
+import { Pedido } from '@/types';
 
 interface CreateOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (dto: CreateOrderDto) => void;
+  /** Si se proporciona, el modal entra en modo edición y pre-rellena los datos */
+  editPedido?: Pedido;
 }
 
 interface LineaCarrito {
@@ -54,7 +57,7 @@ let carritoCounter = 0;
 
 const PRODUCTS_PER_PAGE = 8;
 
-export function CreateOrderModal({ isOpen, onClose, onSave }: CreateOrderModalProps) {
+export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: CreateOrderModalProps) {
   // ── Tema ──────────────────────────────────────────────────────────
   const { settings } = useCompany();
   const primary = settings.primaryColor;          // e.g. "#2563eb"
@@ -108,6 +111,43 @@ export function CreateOrderModal({ isOpen, onClose, onSave }: CreateOrderModalPr
       document.removeEventListener('keydown', handleEscape);
     };
   }, [isOpen, onClose]);
+
+  // ── Pre-rellenar datos cuando se edita un pedido ─────────────────
+  useEffect(() => {
+    if (isOpen && editPedido) {
+      setClienteId(parseInt(editPedido.clienteId));
+      setNotas(editPedido.notas || '');
+      const items: LineaCarrito[] = editPedido.lineas.map((linea) => {
+        carritoCounter++;
+        const producto: OrderProductItem = {
+          id: parseInt(linea.variacionId),
+          productId: parseInt(linea.productoId),
+          name: linea.productoNombre,
+          description: linea.productoNombre,
+          variantName: linea.variacionNombre,
+          sku: '',
+          barcode: '',
+          category: '',
+          stock: 0,
+          stockStatus: 'in_stock',
+          price: linea.precioUnitario,
+          currency: 'MXN',
+          isActive: true,
+          warehouses: [],
+        };
+        return {
+          id: `${linea.variacionId}-${carritoCounter}`,
+          producto,
+          cantidad: linea.cantidad,
+          precioUnitario: linea.precioUnitario,
+          precioLista: linea.precioUnitario,
+          subtotal: linea.precioUnitario * linea.cantidad,
+          usandoPrecioHistorico: false,
+        };
+      });
+      setCarrito(items);
+    }
+  }, [isOpen, editPedido]);
 
   // ── Cargar clientes cuando se abre el modal ───────────────────────
   useEffect(() => {
@@ -346,7 +386,9 @@ export function CreateOrderModal({ isOpen, onClose, onSave }: CreateOrderModalPr
       <div className="fixed inset-0 z-50 flex flex-col bg-white animate-in slide-in-from-bottom-4 fade-in duration-300">
         {/* ── Header ─────────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 bg-white flex-shrink-0">
-          <h2 className="text-lg font-semibold text-gray-900">Crear Nuevo Pedido</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            {editPedido ? `Editar Pedido ${editPedido.numero}` : 'Crear Nuevo Pedido'}
+          </h2>
           <button
             onClick={handleClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -776,7 +818,7 @@ export function CreateOrderModal({ isOpen, onClose, onSave }: CreateOrderModalPr
                 className="w-full flex items-center justify-center gap-2 transition-all duration-200 hover:scale-105 active:scale-95"
               >
                 <DollarSign className="w-4 h-4" />
-                Crear Cotización
+                {editPedido ? 'Guardar Cambios' : 'Crear Cotización'}
               </Button>
               <Button variant="outline" onClick={handleClose} className="w-full transition-all duration-200 hover:scale-105 active:scale-95">
                 Cancelar
