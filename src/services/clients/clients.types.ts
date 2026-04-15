@@ -2,6 +2,8 @@
 export interface ClientListItem {
   id: number;
   name: string;
+  priceZoneId?: number | null;
+  priceZone?: { id: number; code: string; label: string } | null;
 }
 
 // ── Historial de precios de un cliente para un producto ────────────
@@ -33,6 +35,8 @@ export interface ClientDetail {
   totalOrders: number;
   totalSpent: number;
   hystoricalPrices?: PriceHistoryItem[];
+  priceZoneId: number | null;
+  priceZone: { id: number; code: string; label: string } | null;
 }
 
 // ── Filtros para GET /api/clients (paginado) ───────────────────────
@@ -75,6 +79,7 @@ export interface PaginatedClientsDto {
 export interface CreateClientDto {
   name: string;
   document?: string;
+  priceZoneId?: number;
 }
 
 // ── DTO para actualizar un cliente ─────────────────────────────────
@@ -82,6 +87,7 @@ export interface UpdateClientDto {
   name?: string;
   document?: string;
   isActive?: boolean;
+  priceZoneId?: number | null;
 }
 
 // ── Estadísticas de clientes ───────────────────────────────────────

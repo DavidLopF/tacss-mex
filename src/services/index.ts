@@ -11,3 +11,4 @@ export * from './auth';
 export * from './dashboard';
 export * from './suppliers';
 export * from './receptions';
+export * from './price-zones';

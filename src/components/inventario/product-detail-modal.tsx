@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Edit2, Package, DollarSign, Tag, Calendar, Plus, Minus, User, TrendingUp, Truck, Star, ClipboardList, ArrowUpDown } from 'lucide-react';
+import { Edit2, Package, DollarSign, Tag, Calendar, Plus, Minus, User, TrendingUp, Truck, Star, ClipboardList, ArrowUpDown, MapPin } from 'lucide-react';
 import { Modal, Button, Badge, Card, CardContent, Select } from '@/components/ui';
 import { Producto } from '@/types';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { getAllClients, getClientPriceHistory, ClientListItem, PriceHistoryItem } from '@/services/clients';
 import { updateProduct, UpdateProductDto, getCategories, CategoryDto } from '@/services/products';
 import type { ApiProductDetail, ApiProductSupplier, ApiProductPurchaseHistory } from '@/services/products';
+import { getProductPriceTiers, ProductPriceTier } from '@/services/price-zones';
 
 interface ProductDetailModalProps {
   producto: Producto | null;
@@ -39,14 +40,29 @@ export function ProductDetailModal({
   const [saving, setSaving] = useState(false);
   const [categorias, setCategorias] = useState<CategoryDto[]>([]);
   const [loadingCategorias, setLoadingCategorias] = useState(false);
+  const [priceTiers, setPriceTiers] = useState<ProductPriceTier[]>([]);
+  const [loadingTiers, setLoadingTiers] = useState(false);
 
-  // Cargar lista de clientes y categorías cuando se abre el modal
+  // Cargar lista de clientes, categorías y price tiers cuando se abre el modal
   useEffect(() => {
     if (isOpen) {
       loadClientes();
       loadCategorias();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && producto) {
+      const variantId = producto.variaciones[0]?.id;
+      if (variantId) {
+        setLoadingTiers(true);
+        getProductPriceTiers(Number(variantId))
+          .then(setPriceTiers)
+          .catch(() => setPriceTiers([]))
+          .finally(() => setLoadingTiers(false));
+      }
+    }
+  }, [isOpen, producto]);
 
   // Cargar historial de precios cuando cambia el cliente seleccionado
   useEffect(() => {
@@ -505,6 +521,51 @@ export function ProductDetailModal({
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* Precios por Zona */}
+        {(loadingTiers || priceTiers.length > 0) && (
+          <div className="space-y-3">
+            <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-gray-600" />
+              Precios por Zona
+            </h3>
+            {loadingTiers ? (
+              <p className="text-sm text-gray-400 py-2">Cargando tarifas...</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {priceTiers.map((zoneTier) => (
+                  <div key={zoneTier.zone.code} className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className={`px-3 py-2 text-xs font-semibold uppercase tracking-wide ${
+                      zoneTier.zone.code === 'CDMX_VER' ? 'bg-blue-50 text-blue-700' :
+                      zoneTier.zone.code === 'PUEBLA' ? 'bg-green-50 text-green-700' :
+                      'bg-orange-50 text-orange-700'
+                    }`}>
+                      {zoneTier.zone.label}
+                    </div>
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                          <th className="text-left px-3 py-1.5 text-xs font-medium text-gray-500">Desde</th>
+                          <th className="text-right px-3 py-1.5 text-xs font-medium text-gray-500">Precio</th>
+                          <th className="text-right px-3 py-1.5 text-xs font-medium text-gray-500">Tipo</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {zoneTier.tiers.map((tier, i) => (
+                          <tr key={i} className="hover:bg-gray-50">
+                            <td className="px-3 py-1.5 text-gray-700">{tier.minQty} uds</td>
+                            <td className="px-3 py-1.5 text-right font-semibold text-gray-900">{formatCurrency(tier.price)}</td>
+                            <td className="px-3 py-1.5 text-right text-xs text-gray-500">{tier.tierLabel}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

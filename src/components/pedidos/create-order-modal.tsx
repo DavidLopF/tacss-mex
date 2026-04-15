@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card, Button } from '@/components/ui';
-import { 
-  Search, 
-  Plus, 
+import {
+  Search,
+  Plus,
   Minus,
-  Trash2, 
-  ShoppingCart, 
+  Trash2,
+  ShoppingCart,
   DollarSign,
   History,
   Package,
@@ -18,6 +18,7 @@ import {
   Warehouse,
   X,
   User,
+  MapPin,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useDebounce } from '@/lib/hooks';
@@ -33,6 +34,7 @@ import {
   ClientListItem,
   PriceHistoryItem,
 } from '@/services/clients';
+import { getProductPriceTiers, ProductPriceTier } from '@/services/price-zones';
 import { Pedido } from '@/types';
 
 interface CreateOrderModalProps {
@@ -51,6 +53,7 @@ interface LineaCarrito {
   precioLista: number;
   subtotal: number;
   usandoPrecioHistorico: boolean;
+  zoneTierLabel?: string;
 }
 
 let carritoCounter = 0;
@@ -86,6 +89,9 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
   const [expandedHistorial, setExpandedHistorial] = useState<number | null>(null);
   const [historialPrecios, setHistorialPrecios] = useState<PriceHistoryItem[]>([]);
   const [loadingHistorial, setLoadingHistorial] = useState(false);
+
+  // ── Price tiers por zona (cache variantId → tiers) ────────────────
+  const [tierCache, setTierCache] = useState<Map<number, ProductPriceTier[]>>(new Map());
 
   const historialOrdenado = [...historialPrecios].sort(
     (a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime()
@@ -233,12 +239,43 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
     }
   };
 
+  // ── Resolver precio desde tiers para la zona del cliente ─────────
+  const resolvePriceFromTiers = (tiers: ProductPriceTier[], zoneCode: string, qty: number): { price: number; label: string } | null => {
+    const zoneTier = tiers.find((t) => t.zone.code === zoneCode);
+    if (!zoneTier || zoneTier.tiers.length === 0) return null;
+    const sorted = [...zoneTier.tiers].sort((a, b) => b.minQty - a.minQty);
+    const match = sorted.find((t) => qty >= t.minQty);
+    if (!match) return null;
+    return { price: match.price, label: `Precio ${zoneTier.zone.label} — ${match.tierLabel}` };
+  };
+
   // ── Agregar producto al carrito ───────────────────────────────────
   // Si el producto ya existe en el carrito (misma variante, mismo precio),
   // incrementa la cantidad en lugar de crear una línea duplicada.
-  const agregarAlCarrito = (producto: OrderProductItem, precioPersonalizado?: number) => {
+  const agregarAlCarrito = async (producto: OrderProductItem, precioPersonalizado?: number) => {
     const precioBase = producto.price;
-    const precioFinal = precioPersonalizado ?? precioBase;
+    let precioFinal = precioPersonalizado ?? precioBase;
+    let zoneTierLabel: string | undefined;
+
+    // Auto-fill price from zone tiers if client has a zone
+    const clienteActual = clientes.find(c => c.id === clienteId);
+    const zoneCode = clienteActual?.priceZone?.code;
+    if (zoneCode && precioPersonalizado === undefined) {
+      let tiers = tierCache.get(producto.id);
+      if (!tiers) {
+        try {
+          tiers = await getProductPriceTiers(producto.id);
+          setTierCache(prev => new Map(prev).set(producto.id, tiers!));
+        } catch {
+          tiers = [];
+        }
+      }
+      const resolved = resolvePriceFromTiers(tiers, zoneCode, 1);
+      if (resolved) {
+        precioFinal = resolved.price;
+        zoneTierLabel = resolved.label;
+      }
+    }
 
     setCarrito(prev => {
       // Buscar línea existente: mismo producto id Y mismo precio
@@ -268,7 +305,8 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
         precioUnitario: precioFinal,
         precioLista: precioBase,
         subtotal: precioFinal,
-        usandoPrecioHistorico: precioPersonalizado !== undefined,
+        usandoPrecioHistorico: precioPersonalizado !== undefined || zoneTierLabel !== undefined,
+        zoneTierLabel,
       };
       return [...prev, nuevaLinea];
     });
@@ -345,6 +383,7 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
     setHistorialPrecios([]);
     setProductos([]);
     setCurrentPage(1);
+    setTierCache(new Map());
     onClose();
   };
 
@@ -433,8 +472,21 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
                 </select>
               )}
               {clienteSeleccionado && (
-                <div className="mt-2 px-3 py-2 rounded-lg animate-in slide-in-from-top-2 fade-in duration-200" style={{ backgroundColor: primaryBg }}>
-                  <p className="text-sm font-medium" style={{ color: primary }}>{clienteSeleccionado.name}</p>
+                <div className="mt-2 space-y-1.5 animate-in slide-in-from-top-2 fade-in duration-200">
+                  <div className="px-3 py-2 rounded-lg" style={{ backgroundColor: primaryBg }}>
+                    <p className="text-sm font-medium" style={{ color: primary }}>{clienteSeleccionado.name}</p>
+                  </div>
+                  {clienteSeleccionado.priceZone ? (
+                    <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium ${
+                      clienteSeleccionado.priceZone.code === 'CDMX_VER' ? 'bg-blue-50 text-blue-700' :
+                      clienteSeleccionado.priceZone.code === 'PUEBLA' ? 'bg-green-50 text-green-700' :
+                      clienteSeleccionado.priceZone.code === 'OAX_ORZ' ? 'bg-orange-50 text-orange-700' :
+                      'bg-gray-100 text-gray-600'
+                    }`}>
+                      <MapPin className="w-3 h-3" />
+                      Zona: {clienteSeleccionado.priceZone.label}
+                    </div>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -663,7 +715,12 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
                                 <p className="text-xs break-words" style={{ color: primary }}>{linea.producto.variantName}</p>
                               )}
                               <p className="text-[11px] text-gray-400">{linea.producto.sku}</p>
-                              {linea.usandoPrecioHistorico && (
+                              {linea.zoneTierLabel && (
+                                <span className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-blue-600">
+                                  <MapPin className="w-2.5 h-2.5" />{linea.zoneTierLabel}
+                                </span>
+                              )}
+                              {!linea.zoneTierLabel && linea.usandoPrecioHistorico && (
                                 <span className="mt-0.5 inline-flex items-center gap-1 text-[10px]" style={{ color: primary }}>
                                   <History className="w-2.5 h-2.5" />Precio histórico
                                 </span>

@@ -101,6 +101,7 @@ export default function ProveedoresPage() {
   const setOrderSearch = usePurchaseOrdersStore((s) => s.setSearch);
   const setOrderStatusFilter = usePurchaseOrdersStore((s) => s.setStatusFilter);
   const upsertOrder = usePurchaseOrdersStore((s) => s.upsertOrder);
+  const patchOrder = usePurchaseOrdersStore((s) => s.patchOrder);
   const removeOrderFromStore = usePurchaseOrdersStore((s) => s.removeOrder);
 
   const debouncedSupplierSearch = useDebounce(supplierSearch, 500);
@@ -298,14 +299,17 @@ export default function ProveedoresPage() {
     try {
       await updatePurchaseOrder(id, { status: newStatus });
       const label = PURCHASE_ORDER_STATUS_LABELS[newStatus];
+      // Patch inmediato para feedback visual instantáneo (evita que el mapping
+      // de statusId del backend sobreescriba el estado correcto)
+      patchOrder(id, { status: newStatus });
       toast.success(`Orden actualizada a "${label}"`);
-      // Actualizar la orden en el store con el detalle completo del servidor
+      // Refrescar del servidor para tener otros campos actualizados,
+      // pero preservar el status que ya sabemos es correcto
       try {
         const fresh = await getPurchaseOrderById(id);
-        upsertOrder(fresh);
+        upsertOrder({ ...fresh, status: newStatus });
       } catch {
-        // fallback: patch con el nuevo status
-        upsertOrder({ ...orders.find((o) => o.id === id)!, status: newStatus });
+        // el patchOrder ya actualizó el estado arriba
       }
       loadOrderStats();
       broadcastInvalidation(['purchase-orders', 'inventory']);

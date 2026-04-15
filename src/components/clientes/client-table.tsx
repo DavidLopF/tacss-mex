@@ -235,6 +235,9 @@ export function ClientTable({
                   Total Gastado
                 </th>
                 <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-4">
+                  Zona
+                </th>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-4">
                   Estado
                 </th>
                 <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-4">
@@ -248,7 +251,7 @@ export function ClientTable({
             <tbody className="divide-y divide-gray-100">
               {currentClients.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center">
+                  <td colSpan={8} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <User className="w-8 h-8 text-gray-300" />
                       <p className="text-sm text-gray-500">No se encontraron clientes</p>
@@ -290,6 +293,19 @@ export function ClientTable({
                       <span className="text-sm font-medium text-gray-900">
                         {formatCurrency(client.totalSpent)}
                       </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {client.priceZone ? (
+                        <Badge variant={
+                          client.priceZone.code === 'CDMX_VER' ? 'info' :
+                          client.priceZone.code === 'PUEBLA' ? 'success' :
+                          client.priceZone.code === 'OAX_ORZ' ? 'warning' : 'default'
+                        }>
+                          {client.priceZone.label}
+                        </Badge>
+                      ) : (
+                        <Badge variant="default">Sin zona</Badge>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <Badge variant={client.isActive ? 'success' : 'danger'}>
