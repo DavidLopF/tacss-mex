@@ -1,6 +1,6 @@
 'use client';
 
-import { Pedido, EstadoPedido } from '@/types';
+import { Pedido } from '@/types';
 import { useCfdiStore } from '@/stores';
 import { formatCurrency } from '@/lib/utils';
 import { StatusPill } from './status-pill';

@@ -104,7 +104,7 @@ function LineasTab({ pedido }: { pedido: Pedido }) {
             </tr>
           </thead>
           <tbody>
-            {pedido.lineas.map((item, i) => (
+            {pedido.lineas.map((item) => (
               <tr key={item.id} style={{ borderTop: '1px solid #e6e3db' }}>
                 <td style={{ padding: '12px 16px', fontFamily: 'var(--font-mono, monospace)', fontSize: 11.5, color: '#6c6a74' }}>
                   {item.variacionId}

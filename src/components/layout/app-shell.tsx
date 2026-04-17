@@ -64,7 +64,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Sidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
       <div
         className="transition-all duration-300"
-        style={{ marginLeft: collapsed ? '5rem' : '16rem' }}
+        style={{ marginLeft: collapsed ? '72px' : '264px' }}
       >
         <Header />
         {children}
