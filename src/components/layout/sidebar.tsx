@@ -115,7 +115,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   return (
     <aside
       style={{ width: collapsed ? 72 : 264, transition: 'width 320ms cubic-bezier(0.2,0.8,0.2,1)' }}
-      className="fixed left-0 top-0 z-40 h-screen bg-white border-r border-gray-200/80 flex flex-col overflow-hidden"
+      className="fixed left-0 top-0 z-40 h-screen bg-white border-r border-gray-200/80 flex flex-col overflow-visible"
     >
       {/* ── Lockup ── */}
       <div
@@ -283,10 +283,10 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
       {collapsed && (
         <button
           onClick={() => onCollapsedChange(false)}
-          className="absolute top-[88px] -right-3 w-6 h-6 rounded-full bg-white border border-gray-200 text-gray-500 hover:text-gray-800 hover:border-gray-300 shadow-[0_2px_6px_rgba(2,6,23,0.08)] inline-flex items-center justify-center transition-colors z-10"
+          className="absolute top-[88px] right-0 translate-x-1/2 w-6 h-6 rounded-full bg-white border border-gray-200 text-gray-500 hover:text-gray-800 hover:border-gray-300 shadow-[0_4px_12px_rgba(2,6,23,0.10)] inline-flex items-center justify-center transition-all duration-200 z-10"
           aria-label="Expandir"
         >
-          <ChevronRight className="w-3 h-3" />
+          <ChevronRight className="w-3.5 h-3.5" />
         </button>
       )}
     </aside>
