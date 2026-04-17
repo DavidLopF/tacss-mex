@@ -1,8 +1,12 @@
 'use client';
 
 import { Pedido, EstadoPedido } from '@/types';
-import { KanbanColumn } from './kanban-column';
 import { OrderStatusCode } from '@/services/orders';
+import { useCfdiStore } from '@/stores';
+import { formatCurrency } from '@/lib/utils';
+import { CfdiPill } from './cfdi-pill';
+import { STATUS_CONFIG } from './status-pill';
+import { Package } from 'lucide-react';
 
 interface OrdersKanbanProps {
   pedidos: Pedido[];
@@ -11,80 +15,102 @@ interface OrdersKanbanProps {
   onStatusChange?: (orderId: string, newStatusCode: OrderStatusCode) => Promise<void>;
 }
 
-const columnas: Array<{ estado: EstadoPedido; titulo: string; color: string }> = [
-  { estado: 'cotizado', titulo: 'Cotizado', color: 'blue' },
-  { estado: 'transmitido', titulo: 'Transmitido', color: 'purple' },
-  { estado: 'en_curso', titulo: 'En Curso', color: 'orange' },
-  { estado: 'enviado', titulo: 'Enviado', color: 'cyan' },
-  { estado: 'cancelado', titulo: 'Cancelado', color: 'red' },
-];
+const STATUS_ORDER: EstadoPedido[] = ['cotizado', 'transmitido', 'en_curso', 'enviado', 'entregado', 'cancelado'];
 
-export function OrdersKanban({ pedidos, onOrderClick, onOrderUpdate, onStatusChange }: OrdersKanbanProps) {
-  const handleDrop = (pedido: Pedido, nuevoEstado: EstadoPedido) => {
-    onOrderUpdate(pedido, nuevoEstado);
-  };
+const fmtShort = (n: number) => {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
+  return formatCurrency(n);
+};
 
-  const getPedidosPorEstado = (estado: EstadoPedido) => {
-    return pedidos.filter(p => p.estado === estado);
-  };
+const relTime = (date: Date) => {
+  const d = Math.floor((Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24));
+  if (d === 0) return 'hoy';
+  if (d === 1) return 'ayer';
+  if (d < 7) return `hace ${d}d`;
+  return new Date(date).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' });
+};
+
+function KanbanCard({ pedido, onClick }: { pedido: Pedido; onClick: () => void }) {
+  const cfdiStatus = useCfdiStore((s) => s.cfdiStatuses[pedido.id]);
+  const invoiceStatus = cfdiStatus?.invoiceStatus ?? 'no_facturado';
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
-      {/* Contenedor con scroll horizontal */}
-      <div className="flex-1 overflow-x-auto overflow-y-auto">
-        <div className="inline-flex flex-col h-full min-w-full">
-          {/* Headers fijos verticalmente */}
-          <div className="sticky top-0 z-10 bg-white flex gap-4 p-1 pb-0 flex-shrink-0">
-            {columnas.map((columna) => {
-              const pedidosColumna = getPedidosPorEstado(columna.estado);
-              const totalVentas = pedidosColumna.reduce((sum, p) => sum + p.total, 0);
-              const colorClasses: Record<string, { bg: string; text: string; border: string }> = {
-                blue: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-200' },
-                purple: { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-200' },
-                orange: { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-200' },
-                cyan: { bg: 'bg-cyan-100', text: 'text-cyan-700', border: 'border-cyan-200' },
-                green: { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-200' },
-                red: { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-200' },
-              };
-              const colorClass = colorClasses[columna.color] || colorClasses.blue;
-
-              return (
-                <div key={`header-${columna.estado}`} className="w-[280px] flex-shrink-0">
-                  <div className={`p-4 ${colorClass.bg} border-b-2 ${colorClass.border} rounded-t-lg`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className={`font-semibold ${colorClass.text}`}>{columna.titulo}</h3>
-                      <span className={`${colorClass.bg} ${colorClass.text} text-xs font-bold px-2 py-1 rounded-full`}>
-                        {pedidosColumna.length}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-600">Total:</span>
-                      <span className={`font-bold ${colorClass.text}`}>
-                        ${(totalVentas / 1000).toFixed(1)}K
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Columnas de contenido */}
-          <div className="flex gap-4 p-1 pt-0 flex-1">
-            {columnas.map((columna) => (
-              <KanbanColumn
-                key={columna.estado}
-                titulo={columna.titulo}
-                estado={columna.estado}
-                pedidos={getPedidosPorEstado(columna.estado)}
-                color={columna.color}
-                onOrderClick={onOrderClick}
-                onDrop={handleDrop}
-                onStatusChange={onStatusChange}
-              />
-            ))}
-          </div>
+    <div
+      onClick={onClick}
+      style={{
+        background: 'white', borderRadius: 10, border: '1px solid #e6e3db',
+        padding: 12, cursor: 'pointer', transition: 'box-shadow 0.12s',
+        boxShadow: '0 1px 0 rgba(17,16,26,0.04)',
+      }}
+      onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 2px 10px rgba(17,16,26,0.06)')}
+      onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 0 rgba(17,16,26,0.04)')}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+        <span style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: 10.5, color: '#6c6a74' }}>
+          {pedido.numero}
+        </span>
+        <span style={{ fontSize: 10.5, color: '#a19ea8' }}>{relTime(pedido.createdAt)}</span>
+      </div>
+      <div style={{ fontSize: 13, fontWeight: 500, lineHeight: 1.3, marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {pedido.clienteNombre}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11.5 }}>
+        <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 500 }}>{formatCurrency(pedido.total)}</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#a19ea8' }}>
+          <Package size={11} />{pedido.lineas.length}
+        </span>
+      </div>
+      {invoiceStatus !== 'no_facturado' && (
+        <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #e6e3db' }}>
+          <CfdiPill value={invoiceStatus} />
         </div>
+      )}
+    </div>
+  );
+}
+
+export function OrdersKanban({ pedidos, onOrderClick }: OrdersKanbanProps) {
+  const byStatus = (estado: EstadoPedido) => pedidos.filter(p => p.estado === estado);
+
+  return (
+    <div style={{ padding: '24px 32px', overflowX: 'auto' }}>
+      <div style={{ display: 'flex', gap: 16, minWidth: 'max-content', paddingBottom: 16 }}>
+        {STATUS_ORDER.map(st => {
+          const cfg = STATUS_CONFIG[st];
+          const list = byStatus(st);
+          const total = list.reduce((s, p) => s + p.total, 0);
+
+          return (
+            <div key={st} style={{ width: 280, flexShrink: 0 }}>
+              {/* Column header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: cfg.dot, flexShrink: 0 }} />
+                  <span style={{ fontSize: 12.5, fontWeight: 500 }}>{cfg.label}</span>
+                  <span style={{ fontSize: 11, color: '#a19ea8', fontVariantNumeric: 'tabular-nums' }}>{list.length}</span>
+                </div>
+                <span style={{ fontSize: 11, color: '#a19ea8', fontVariantNumeric: 'tabular-nums' }}>{fmtShort(total)}</span>
+              </div>
+              <div style={{ height: 1, background: '#e6e3db', marginBottom: 10 }} />
+
+              {/* Cards */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minHeight: 180 }}>
+                {list.map(p => (
+                  <KanbanCard key={p.id} pedido={p} onClick={() => onOrderClick(p)} />
+                ))}
+                {list.length === 0 && (
+                  <div style={{
+                    textAlign: 'center', padding: '24px 16px', fontSize: 11.5, color: '#a19ea8',
+                    border: '1px dashed #e6e3db', borderRadius: 8,
+                  }}>
+                    Vacío
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

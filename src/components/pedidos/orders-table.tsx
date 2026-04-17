@@ -3,11 +3,12 @@
 import { useState, useMemo } from 'react';
 import { Pedido, EstadoPedido } from '@/types';
 import { OrderStatusCode } from '@/services/orders';
-import { Badge, Button } from '@/components/ui';
-import { Eye, Send, ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
-import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { useCfdiStore } from '@/stores';
+import { formatCurrency } from '@/lib/utils';
+import { StatusPill } from './status-pill';
+import { CfdiPill } from './cfdi-pill';
 import { ChangeStatusMenu } from './change-status-menu';
+import { Eye, Send, ChevronLeft, ChevronRight, Inbox, MoreVertical } from 'lucide-react';
 
 interface OrdersTableProps {
   pedidos: Pedido[];
@@ -17,265 +18,234 @@ interface OrdersTableProps {
   onEmitirCFDI?: (pedido: Pedido) => void;
 }
 
-type StatusTab = 'todos' | EstadoPedido;
+const ITEMS_PER_PAGE = 10;
 
-const STATUS_TABS: { key: StatusTab; label: string; color: string }[] = [
-  { key: 'todos', label: 'Todos', color: 'text-gray-700' },
-  { key: 'cotizado', label: 'Cotizado', color: 'text-blue-700' },
-  { key: 'transmitido', label: 'Transmitido', color: 'text-purple-700' },
-  { key: 'en_curso', label: 'En Curso', color: 'text-orange-700' },
-  { key: 'enviado', label: 'Enviado', color: 'text-cyan-700' },
-  { key: 'cancelado', label: 'Cancelado', color: 'text-red-700' },
-];
+function fmtShort(n: number) {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(0)}K`;
+  return formatCurrency(n);
+}
 
-const CFDI_STATUS_BADGE = {
-  no_facturado: { variant: 'default' as const, label: 'Sin facturar' },
-  en_proceso: { variant: 'warning' as const, label: 'En proceso' },
-  facturado: { variant: 'success' as const, label: 'Facturado' },
-  cancelado: { variant: 'danger' as const, label: 'Cancelado' },
+const daysSince = (date: Date) =>
+  Math.floor((Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24));
+
+const getStatusCode = (estado: string): string => {
+  const m: Record<string, string> = {
+    cotizado: 'COTIZADO', transmitido: 'TRANSMITIDO',
+    en_curso: 'EN_CURSO', enviado: 'ENVIADO',
+    entregado: 'ENTREGADO', cancelado: 'CANCELADO',
+  };
+  return m[estado] ?? 'COTIZADO';
 };
 
-const ESTADO_COLORS: Record<EstadoPedido, { bg: string; text: string; badge: string }> = {
-  cotizado: { bg: 'bg-blue-50', text: 'text-blue-700', badge: 'default' },
-  transmitido: { bg: 'bg-purple-50', text: 'text-purple-700', badge: 'default' },
-  en_curso: { bg: 'bg-orange-50', text: 'text-orange-700', badge: 'warning' },
-  enviado: { bg: 'bg-cyan-50', text: 'text-cyan-700', badge: 'default' },
-  cancelado: { bg: 'bg-red-50', text: 'text-red-700', badge: 'danger' },
-  pagado: { bg: 'bg-green-50', text: 'text-green-700', badge: 'success' },
-};
+function CheckBox({ checked, onChange }: { checked: boolean; onChange: () => void }) {
+  return (
+    <button
+      onClick={e => { e.stopPropagation(); onChange(); }}
+      style={{
+        width: 14, height: 14, borderRadius: 3, flexShrink: 0,
+        border: checked ? 'none' : '1.5px solid #a19ea8',
+        background: checked ? 'var(--foreground)' : 'white',
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        cursor: 'pointer', padding: 0,
+      }}
+    >
+      {checked && (
+        <svg width="9" height="9" viewBox="0 0 9 9">
+          <path d="M1 4.5L3.5 7L8 1.5" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+    </button>
+  );
+}
 
 export function OrdersTable({ pedidos, onOrderClick, onStatusChange, onEmitirCFDI }: OrdersTableProps) {
-  const [activeTab, setActiveTab] = useState<StatusTab>('todos');
   const [page, setPage] = useState(1);
-  const [showOnlyNotBilled, setShowOnlyNotBilled] = useState(false);
-
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const cfdiStatuses = useCfdiStore((s) => s.cfdiStatuses);
 
-  // Conteo por estado
-  const counts = useMemo(() => {
-    const c: Record<string, number> = { todos: pedidos.length };
-    for (const p of pedidos) {
-      c[p.estado] = (c[p.estado] || 0) + 1;
-    }
-    return c;
-  }, [pedidos]);
-
-  // Filtrar por tab activo
-  const filteredPedidos = useMemo(() => {
-    let result = activeTab === 'todos'
-      ? pedidos
-      : pedidos.filter((p) => p.estado === activeTab);
-
-    // Filtro "Solo no facturados"
-    if (showOnlyNotBilled) {
-      result = result.filter((p) => {
-        const cfdiStatus = cfdiStatuses[p.id];
-        return !cfdiStatus || cfdiStatus.invoiceStatus === 'no_facturado';
-      });
-    }
-
-    return result;
-  }, [pedidos, activeTab, showOnlyNotBilled, cfdiStatuses]);
-
-  // Paginación
-  const itemsPerPage = 10;
-  const totalPages = Math.max(1, Math.ceil(filteredPedidos.length / itemsPerPage));
+  const totalPages = Math.max(1, Math.ceil(pedidos.length / ITEMS_PER_PAGE));
   const safePage = Math.min(page, totalPages);
-  const paginatedPedidos = useMemo(() => {
-    const start = (safePage - 1) * itemsPerPage;
-    return filteredPedidos.slice(start, start + itemsPerPage);
-  }, [filteredPedidos, safePage]);
 
-  const handleTabChange = (tab: StatusTab) => {
-    setActiveTab(tab);
-    setPage(1);
+  const paginated = useMemo(() => {
+    const start = (safePage - 1) * ITEMS_PER_PAGE;
+    return pedidos.slice(start, start + ITEMS_PER_PAGE);
+  }, [pedidos, safePage]);
+
+  const toggleSel = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
   };
 
-  const handlePageChange = (newPage: number) => {
-    if (newPage < 1 || newPage > totalPages) return;
-    setPage(newPage);
+  const toggleAll = () => {
+    if (selected.size === paginated.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(paginated.map(p => p.id)));
+    }
   };
 
-  const getStatusCodeFromEstado = (estado: string): string => {
-    const mapping: Record<string, string> = {
-      'cotizado': 'COTIZADO',
-      'transmitido': 'TRANSMITIDO',
-      'en_curso': 'EN_CURSO',
-      'enviado': 'ENVIADO',
-      'cancelado': 'CANCELADO',
-    };
-    return mapping[estado] || 'COTIZADO';
-  };
-
-  const getCfdiStatusForOrder = (pedidoId: string) => {
-    return cfdiStatuses[pedidoId] || { invoiceStatus: 'no_facturado' };
-  };
-
-  const canEmitirCFDI = (pedido: Pedido) => {
-    const cfdiStatus = getCfdiStatusForOrder(pedido.id);
-    return pedido.estado === 'enviado' && cfdiStatus.invoiceStatus !== 'facturado';
-  };
+  const totalMonto = pedidos.reduce((s, p) => s + p.total, 0);
+  const allChecked = paginated.length > 0 && selected.size === paginated.length;
 
   return (
-    <div className="space-y-4">
-      {/* Status Tabs */}
-      <div className="flex flex-wrap gap-2">
-        {STATUS_TABS.map((tab) => {
-          const count = counts[tab.key] ?? 0;
-          const isActive = activeTab === tab.key;
-
-          return (
+    <div style={{ padding: '24px 32px' }}>
+      {/* Bulk action bar */}
+      {selected.size > 0 && (
+        <div style={{
+          marginBottom: 12, padding: '8px 12px', background: '#f1ede3',
+          borderRadius: 8, display: 'flex', alignItems: 'center', gap: 12,
+          fontSize: 12.5, border: '1px solid #e6e3db',
+        }}>
+          <span style={{ color: '#6c6a74', fontVariantNumeric: 'tabular-nums' }}>{selected.size} seleccionados</span>
+          {onStatusChange && (
             <button
-              key={tab.key}
-              onClick={() => handleTabChange(tab.key)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive
-                  ? `${ESTADO_COLORS[tab.key as EstadoPedido]?.bg || 'bg-gray-100'} ${tab.color}`
-                  : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
-              }`}
+              onClick={() => setSelected(new Set())}
+              style={{ fontSize: 12, color: '#6c6a74', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: 6 }}
             >
-              {tab.label} <span className="ml-1 font-semibold">({count})</span>
+              Limpiar selección
             </button>
-          );
-        })}
-      </div>
-
-      {/* Filtro "Solo no facturados" */}
-      <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={showOnlyNotBilled}
-            onChange={(e) => {
-              setShowOnlyNotBilled(e.target.checked);
-              setPage(1);
-            }}
-            className="w-4 h-4 rounded border-gray-300"
-          />
-          <span className="text-sm text-gray-600">Solo no facturados</span>
-        </label>
-      </div>
-
-      {/* Table */}
-      {paginatedPedidos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <Inbox className="w-12 h-12 text-gray-300 mb-3" />
-          <p className="text-sm text-gray-500">No hay pedidos para mostrar</p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-          <table className="w-full text-sm">
-            <thead className="border-b border-gray-200 bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left font-semibold text-gray-900">Pedido</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-900">Cliente</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-900">Est. Logística</th>
-                <th className="px-4 py-3 text-right font-semibold text-gray-900">Total</th>
-                <th className="px-4 py-3 text-center font-semibold text-gray-900">Est. CFDI</th>
-                <th className="px-4 py-3 text-center font-semibold text-gray-900">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedPedidos.map((pedido) => {
-                const cfdiStatus = getCfdiStatusForOrder(pedido.id);
-                const estatoColors = ESTADO_COLORS[pedido.estado];
-                const cfdiInfo = CFDI_STATUS_BADGE[cfdiStatus.invoiceStatus];
-
-                return (
-                  <tr key={pedido.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    {/* Pedido */}
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => onOrderClick(pedido)}
-                        className="font-mono font-semibold text-blue-600 hover:text-blue-800"
-                      >
-                        {pedido.numero}
-                      </button>
-                    </td>
-
-                    {/* Cliente */}
-                    <td className="px-4 py-3 text-gray-700">{pedido.clienteNombre}</td>
-
-                    {/* Est. Logística */}
-                    <td className="px-4 py-3">
-                      <Badge variant={estatoColors?.badge === 'warning' ? 'warning' : 'default'} className="text-xs">
-                        {pedido.estado.charAt(0).toUpperCase() + pedido.estado.slice(1).replace(/_/g, ' ')}
-                      </Badge>
-                    </td>
-
-                    {/* Total */}
-                    <td className="px-4 py-3 text-right font-medium text-gray-900">
-                      {formatCurrency(pedido.total)}
-                    </td>
-
-                    {/* Est. CFDI */}
-                    <td className="px-4 py-3 text-center">
-                      <Badge variant={cfdiInfo.variant} className="text-xs">
-                        {cfdiInfo.label}
-                      </Badge>
-                    </td>
-
-                    {/* Acciones */}
-                    <td className="px-4 py-3 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => onOrderClick(pedido)}
-                          className="p-1 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
-                          title="Ver detalles"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-
-                        {canEmitirCFDI(pedido) && onEmitirCFDI && (
-                          <button
-                            onClick={() => onEmitirCFDI(pedido)}
-                            className="p-1 text-green-600 hover:text-green-800 hover:bg-green-100 rounded transition-colors"
-                            title="Emitir CFDI"
-                          >
-                            <Send className="w-4 h-4" />
-                          </button>
-                        )}
-
-                        {onStatusChange && (
-                          <ChangeStatusMenu
-                            currentStatusCode={getStatusCodeFromEstado(pedido.estado)}
-                            onChangeStatus={(code) => onStatusChange(pedido.id, code)}
-                          />
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          )}
         </div>
       )}
 
-      {/* Paginación */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(safePage - 1)}
-            disabled={safePage === 1}
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <span className="text-sm text-gray-600">
-            Página {safePage} de {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(safePage + 1)}
-            disabled={safePage === totalPages}
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
-      )}
+      <div style={{ background: 'white', border: '1px solid #e6e3db', borderRadius: 12, overflow: 'hidden' }}>
+        {pedidos.length === 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '56px 24px', textAlign: 'center' }}>
+            <Inbox size={40} style={{ color: '#e6e3db', marginBottom: 12 }} />
+            <div style={{ fontSize: 22, fontWeight: 600, color: '#6c6a74', marginBottom: 4 }}>Nada por aquí</div>
+            <div style={{ fontSize: 12.5, color: '#a19ea8' }}>Ajusta los filtros o crea un nuevo pedido.</div>
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
+              <thead>
+                <tr style={{ background: '#fbfaf5', fontSize: 10.5, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#6c6a74' }}>
+                  <th style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 500, width: 32 }}>
+                    <CheckBox checked={allChecked} onChange={toggleAll} />
+                  </th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 500 }}>Pedido</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 500 }}>Cliente</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 500 }}>Estado</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 500 }}>CFDI</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 500 }}>Partidas</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 500 }}>Total</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 500 }}>Creado</th>
+                  <th style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 500 }} />
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.map((pedido) => {
+                  const isSel = selected.has(pedido.id);
+                  const cfdiInfo = cfdiStatuses[pedido.id];
+                  const invoiceStatus = cfdiInfo?.invoiceStatus ?? 'no_facturado';
+                  const canCFDI = pedido.estado === 'enviado' && invoiceStatus !== 'facturado';
+
+                  return (
+                    <tr
+                      key={pedido.id}
+                      onClick={() => onOrderClick(pedido)}
+                      style={{
+                        borderTop: '1px solid #e6e3db',
+                        cursor: 'pointer',
+                        background: isSel ? '#f1ede3' : 'transparent',
+                        transition: 'background 0.1s',
+                      }}
+                      onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = '#fbfaf5'; }}
+                      onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      <td style={{ padding: '12px 16px' }} onClick={e => e.stopPropagation()}>
+                        <CheckBox checked={isSel} onChange={() => toggleSel(pedido.id)} />
+                      </td>
+                      <td style={{ padding: '12px 12px' }}>
+                        <span style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: 11.5, color: '#3a3840' }}>
+                          {pedido.numero}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 12px', fontWeight: 500 }}>{pedido.clienteNombre}</td>
+                      <td style={{ padding: '12px 12px' }}><StatusPill status={pedido.estado} /></td>
+                      <td style={{ padding: '12px 12px' }}><CfdiPill value={invoiceStatus} /></td>
+                      <td style={{ padding: '12px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: '#6c6a74' }}>
+                        {pedido.lineas.length}
+                      </td>
+                      <td style={{ padding: '12px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 500 }}>
+                        {formatCurrency(pedido.total)}
+                      </td>
+                      <td style={{ padding: '12px 12px', color: '#6c6a74', fontVariantNumeric: 'tabular-nums' }}>
+                        hace {daysSince(pedido.createdAt)}d
+                      </td>
+                      <td style={{ padding: '12px 16px', textAlign: 'right' }} onClick={e => e.stopPropagation()}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
+                          {canCFDI && onEmitirCFDI && (
+                            <button
+                              onClick={() => onEmitirCFDI(pedido)}
+                              title="Emitir CFDI"
+                              style={{
+                                padding: '4px', borderRadius: 6, border: 'none', background: 'none',
+                                color: '#275a41', cursor: 'pointer',
+                              }}
+                              onMouseEnter={e => (e.currentTarget.style.background = '#e9f2ea')}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                            >
+                              <Send size={13} />
+                            </button>
+                          )}
+                          {onStatusChange && (
+                            <ChangeStatusMenu
+                              currentStatusCode={getStatusCode(pedido.estado)}
+                              onChangeStatus={(code) => onStatusChange(pedido.id, code)}
+                            />
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Footer */}
+        {pedidos.length > 0 && (
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '10px 16px', borderTop: '1px solid #e6e3db', fontSize: 12, color: '#6c6a74',
+          }}>
+            <div>{pedidos.length} pedidos · {fmtShort(totalMonto)} total</div>
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={safePage === 1}
+                  style={{
+                    padding: '4px 8px', borderRadius: 6, border: '1px solid #e6e3db',
+                    background: 'none', cursor: safePage === 1 ? 'not-allowed' : 'pointer',
+                    opacity: safePage === 1 ? 0.4 : 1, display: 'inline-flex',
+                  }}
+                >
+                  <ChevronLeft size={13} />
+                </button>
+                <span style={{ fontVariantNumeric: 'tabular-nums' }}>{safePage} / {totalPages}</span>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={safePage === totalPages}
+                  style={{
+                    padding: '4px 8px', borderRadius: 6, border: '1px solid #e6e3db',
+                    background: 'none', cursor: safePage === totalPages ? 'not-allowed' : 'pointer',
+                    opacity: safePage === totalPages ? 0.4 : 1, display: 'inline-flex',
+                  }}
+                >
+                  <ChevronRight size={13} />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

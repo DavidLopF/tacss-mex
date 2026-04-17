@@ -19,6 +19,7 @@ const estadoColors = {
   transmitido: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', badge: 'default' as const, dot: 'bg-purple-500', label: 'Transmitido' },
   en_curso: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', badge: 'warning' as const, dot: 'bg-orange-500', label: 'En Curso' },
   enviado: { bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-700', badge: 'default' as const, dot: 'bg-cyan-500', label: 'Enviado' },
+  entregado: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', badge: 'success' as const, dot: 'bg-emerald-500', label: 'Entregado' },
   pagado: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', badge: 'success' as const, dot: 'bg-green-500', label: 'Pagado' },
   cancelado: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', badge: 'danger' as const, dot: 'bg-red-500', label: 'Cancelado' },
 };

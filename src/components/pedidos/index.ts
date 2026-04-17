@@ -6,3 +6,6 @@ export { OrdersTable } from './orders-table';
 export { OrderDetailModal } from './order-detail-modal';
 export { CreateOrderModal } from './create-order-modal';
 export { ChangeStatusMenu } from './change-status-menu';
+export { InboxView } from './inbox-view';
+export { StatusPill } from './status-pill';
+export { CfdiPill } from './cfdi-pill';

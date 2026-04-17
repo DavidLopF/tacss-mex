@@ -44,6 +44,7 @@ export function getEstadoColor(estado: EstadoPedido): string {
     transmitido: 'bg-purple-100 text-purple-700',
     en_curso: 'bg-orange-100 text-orange-700',
     enviado: 'bg-cyan-100 text-cyan-700',
+    entregado: 'bg-emerald-100 text-emerald-700',
     cancelado: 'bg-red-100 text-red-700',
     pagado: 'bg-green-100 text-green-700',
   };
@@ -56,6 +57,7 @@ export function getEstadoLabel(estado: EstadoPedido): string {
     transmitido: 'Transmitido',
     en_curso: 'En Curso',
     enviado: 'Enviado',
+    entregado: 'Entregado',
     cancelado: 'Cancelado',
     pagado: 'Pagado',
   };
