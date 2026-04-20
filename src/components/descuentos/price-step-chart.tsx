@@ -7,6 +7,7 @@ interface PriceStepChartProps {
   basePrice: number;
   tiers: PriceTierItem[];
   defaultZoneId?: number;
+  zoneLabel?: string;
 }
 
 const W = 380, H = 220, PAD_L = 54, PAD_R = 16, PAD_T = 16, PAD_B = 36;
@@ -17,7 +18,7 @@ function pctOff(base: number, price: number) {
   return base > 0 ? ((base - price) / base) * 100 : 0;
 }
 
-export function PriceStepChart({ basePrice, tiers, defaultZoneId = 1 }: PriceStepChartProps) {
+export function PriceStepChart({ basePrice, tiers, defaultZoneId = 1, zoneLabel }: PriceStepChartProps) {
   const showTiers = tiers.filter(t => t.priceZoneId === defaultZoneId || t.priceZoneId === null);
   const sorted = [...showTiers].sort((a, b) => a.minQty - b.minQty);
 
@@ -31,7 +32,7 @@ export function PriceStepChart({ basePrice, tiers, defaultZoneId = 1 }: PriceSte
         }}
       >
         <div style={{ fontSize: 13, fontWeight: 600, color: '#1f2937' }}>Escalera de precios</div>
-        <div style={{ fontSize: 11.5, color: '#6b7280' }}>Zona General · por cantidad</div>
+        <div style={{ fontSize: 11.5, color: '#6b7280' }}>{zoneLabel ?? 'Zona General'} · por cantidad</div>
         <div style={{ padding: '48px 0', textAlign: 'center', fontSize: 12.5, color: '#6b7280' }}>
           Agrega tiers para ver la escalera.
         </div>
@@ -83,7 +84,7 @@ export function PriceStepChart({ basePrice, tiers, defaultZoneId = 1 }: PriceSte
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
         <div>
           <div style={{ fontSize: 13, fontWeight: 600, color: '#1f2937' }}>Escalera de precios</div>
-          <div style={{ fontSize: 11.5, color: '#6b7280' }}>Zona General · por cantidad</div>
+          <div style={{ fontSize: 11.5, color: '#6b7280' }}>{zoneLabel ?? 'Zona General'} · por cantidad</div>
         </div>
         <span style={{
           display: 'inline-flex', alignItems: 'center', gap: 5,

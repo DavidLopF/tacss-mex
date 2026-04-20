@@ -249,7 +249,7 @@ function CantidadView({ zones, toast }: { zones: PriceZone[]; toast: ReturnType<
                 onClick={() => setSelectedId(v.id)}
                 style={{
                   width: '100%', textAlign: 'left', padding: '10px 12px',
-                  borderBottom: '1px solid #e5e7eb', border: 'none', borderBottomStyle: 'solid',
+                  border: 'none', borderBottom: '1px solid #e5e7eb',
                   background: isActive ? 'white' : 'transparent', cursor: 'pointer',
                   boxShadow: isActive ? 'inset 3px 0 0 var(--primary-color, #2563eb)' : 'none',
                   transition: 'background 0.14s, box-shadow 0.14s',
@@ -321,6 +321,16 @@ interface TierDraft {
   tierLabel: string;
 }
 
+// Zone colors for visual distinction
+const ZONE_COLORS = [
+  'var(--primary-color, #2563eb)',
+  '#7c3aed',
+  '#059669',
+  '#d97706',
+  '#dc2626',
+  '#0891b2',
+];
+
 function VariantDetail({ variant, zones, toast }: {
   variant: OrderProductItem;
   zones: PriceZone[];
@@ -332,6 +342,7 @@ function VariantDetail({ variant, zones, toast }: {
   const [draft, setDraft] = useState<TierDraft | null>(null);
   const [saving, setSaving] = useState(false);
   const [justAddedId, setJustAddedId] = useState<number | null>(null);
+  const [selectedZoneFilter, setSelectedZoneFilter] = useState<number | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -343,7 +354,36 @@ function VariantDetail({ variant, zones, toast }: {
 
   useEffect(() => { load(); setEditingId(null); setDraft(null); }, [load]);
 
+  // Compute which zones actually have tiers for this variant
+  const activeZoneIds = useMemo(() => {
+    const ids = new Set(tiers.map(t => t.priceZoneId).filter((id): id is number => id !== null));
+    return [...ids];
+  }, [tiers]);
+
+  const activeZones = useMemo(() =>
+    zones.filter(z => activeZoneIds.includes(z.id)),
+    [zones, activeZoneIds]
+  );
+
+  // Auto-select first zone when tiers load
+  useEffect(() => {
+    if (activeZoneIds.length > 0 && selectedZoneFilter === null) {
+      setSelectedZoneFilter(activeZoneIds[0]);
+    }
+  }, [activeZoneIds]);
+
+  // Reset zone filter when variant changes
+  useEffect(() => { setSelectedZoneFilter(null); }, [variant.id]);
+
   const sorted = useMemo(() => [...tiers].sort((a, b) => a.minQty - b.minQty), [tiers]);
+
+  // Filtered tiers for the table
+  const filteredTiers = useMemo(() =>
+    selectedZoneFilter !== null
+      ? sorted.filter(t => t.priceZoneId === selectedZoneFilter)
+      : sorted,
+    [sorted, selectedZoneFilter]
+  );
 
   const startEdit = (t: PriceTierItem) => {
     setEditingId(t.id);
@@ -408,7 +448,7 @@ function VariantDetail({ variant, zones, toast }: {
     }
   };
 
-  const defaultZoneId = zones.find(z => z.code === 'GENERAL')?.id ?? zones[0]?.id ?? 1;
+  const selectedZone = zones.find(z => z.id === selectedZoneFilter) ?? null;
 
   return (
     <div style={{ padding: 28 }}>
@@ -463,6 +503,65 @@ function VariantDetail({ variant, zones, toast }: {
         </div>
       </div>
 
+      {/* Zone Filter Bar */}
+      {!loading && activeZones.length > 1 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16,
+          padding: '10px 14px', background: '#fafbf7', borderRadius: 10,
+          border: '1px solid #e5e7eb',
+        }}>
+          <span style={{ fontSize: 11.5, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', marginRight: 4 }}>
+            Zona:
+          </span>
+          {activeZones.map((z, idx) => {
+            const isActive = selectedZoneFilter === z.id;
+            const color = ZONE_COLORS[idx % ZONE_COLORS.length];
+            return (
+              <button
+                key={z.id}
+                onClick={() => setSelectedZoneFilter(isActive ? null : z.id)}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '5px 12px', borderRadius: 999, fontSize: 12.5, fontWeight: 500,
+                  border: isActive ? `1.5px solid ${color}` : '1.5px solid #e5e7eb',
+                  background: isActive ? `${color}18` : 'white',
+                  color: isActive ? color : '#6b7280',
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'all 0.14s',
+                }}
+                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.borderColor = color; e.currentTarget.style.color = color; } }}
+                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.color = '#6b7280'; } }}
+              >
+                <span style={{ width: 7, height: 7, borderRadius: 999, background: color, flexShrink: 0 }} />
+                {z.label}
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: 18, height: 18, borderRadius: 999, fontSize: 10, fontWeight: 600,
+                  background: isActive ? color : '#e5e7eb',
+                  color: isActive ? 'white' : '#6b7280',
+                }}>
+                  {tiers.filter(t => t.priceZoneId === z.id).length}
+                </span>
+              </button>
+            );
+          })}
+          {selectedZoneFilter !== null && (
+            <button
+              onClick={() => setSelectedZoneFilter(null)}
+              style={{
+                marginLeft: 4, padding: '5px 10px', borderRadius: 999, fontSize: 11.5,
+                border: '1.5px dashed #d1d5db', background: 'transparent', color: '#9ca3af',
+                cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.14s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#4b5563'; e.currentTarget.style.borderColor = '#9ca3af'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#9ca3af'; e.currentTarget.style.borderColor = '#d1d5db'; }}
+            >
+              Ver todas
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Table + Chart */}
       <div style={{ display: 'grid', gap: 20, gridTemplateColumns: '1.5fr 1fr' }}>
         {/* Table */}
@@ -485,7 +584,7 @@ function VariantDetail({ variant, zones, toast }: {
                   <tr><td colSpan={7} style={{ padding: '32px 12px', textAlign: 'center', color: '#9ca3af', fontSize: 12.5 }}>Cargando…</td></tr>
                 ) : (
                   <>
-                    {sorted.map((t, idx) => {
+                    {filteredTiers.map((t, idx) => {
                       const isEdit = editingId === t.id;
                       const d = isEdit ? draft! : { ...t, id: t.id };
                       const zone = zones.find(z => z.id === d.priceZoneId);
@@ -643,7 +742,7 @@ function VariantDetail({ variant, zones, toast }: {
                       </tr>
                     )}
 
-                    {sorted.length === 0 && editingId !== '__new__' && (
+                    {filteredTiers.length === 0 && editingId !== '__new__' && (
                       <tr>
                         <td colSpan={7} style={{ padding: '48px 12px', textAlign: 'center' }}>
                           <div style={{ fontSize: 13, color: '#4b5563', fontWeight: 500, marginBottom: 4 }}>Sin tiers de descuento</div>
@@ -667,15 +766,25 @@ function VariantDetail({ variant, zones, toast }: {
               </tbody>
             </table>
           </div>
-          {sorted.length > 0 && (
+          {filteredTiers.length > 0 && (
             <div style={{ padding: '10px 12px', borderTop: '1px solid #e5e7eb', background: '#fafbf7', fontSize: 11.5, color: '#6b7280', display: 'flex', justifyContent: 'space-between' }}>
               <span>Los tiers se ordenan automáticamente por cantidad mínima.</span>
+              {selectedZoneFilter !== null && (
+                <span style={{ color: '#9ca3af' }}>
+                  Mostrando {filteredTiers.length} de {sorted.length} tiers
+                </span>
+              )}
             </div>
           )}
         </div>
 
         {/* Chart */}
-        <PriceStepChart basePrice={variant.price} tiers={tiers} defaultZoneId={defaultZoneId} />
+        <PriceStepChart
+          basePrice={variant.price}
+          tiers={tiers}
+          defaultZoneId={selectedZoneFilter ?? (zones.find(z => z.code === 'GENERAL')?.id ?? zones[0]?.id ?? 1)}
+          zoneLabel={selectedZone?.label ?? 'Todas las zonas'}
+        />
       </div>
     </div>
   );
@@ -723,7 +832,7 @@ function CategoriaView({ zones, toast }: { zones: PriceZone[]; toast: ReturnType
                 onClick={() => setSelectedId(c.id)}
                 style={{
                   width: '100%', textAlign: 'left', padding: '10px 12px',
-                  borderBottom: '1px solid #e5e7eb', border: 'none', borderBottomStyle: 'solid',
+                  border: 'none', borderBottom: '1px solid #e5e7eb',
                   background: isActive ? 'white' : 'transparent', cursor: 'pointer', fontFamily: 'inherit',
                   boxShadow: isActive ? 'inset 3px 0 0 var(--primary-color, #2563eb)' : 'none',
                   transition: 'background 0.14s',

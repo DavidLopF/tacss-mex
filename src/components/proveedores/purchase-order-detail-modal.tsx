@@ -165,9 +165,14 @@ export function PurchaseOrderDetailModal({ isOpen, onClose, order, onStatusChang
   const handleStatusChange = async (newStatus: PurchaseOrderStatus) => {
     // Si el destino es 'partial' o 'received', abrir el modal de recepción
     // en vez de cambiar estado directamente. El backend transiciona automáticamente.
+    // Excepción: si la orden no tiene ítems pendientes, cambiar estado directo.
     if (newStatus === 'partial' || newStatus === 'received') {
-      setIsReceptionModalOpen(true);
-      return;
+      const hasPendingItems = order?.items.some((i) => i.qty - i.qtyReceived > 0);
+      if (hasPendingItems) {
+        setIsReceptionModalOpen(true);
+        return;
+      }
+      // Sin ítems pendientes → continuar con cambio directo de estado
     }
     if (!onStatusChange) return;
     try {

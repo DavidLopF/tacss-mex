@@ -32,6 +32,9 @@ export interface ClientDetail {
   isActive: boolean;
   createdAt: string;
   updatedAt?: string;
+  phone?: string | null;
+  address?: string | null;
+  cityName?: string | null;
   totalOrders: number;
   totalSpent: number;
   hystoricalPrices?: PriceHistoryItem[];

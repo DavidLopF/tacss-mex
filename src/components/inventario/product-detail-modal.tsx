@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Edit2, Package, DollarSign, Tag, Calendar, Plus, Minus, User, TrendingUp, Truck, Star, ClipboardList, ArrowUpDown, MapPin } from 'lucide-react';
+import { Edit2, Package, DollarSign, Tag, Calendar, Plus, Minus, User, TrendingUp, Truck, Star, ClipboardList, ArrowUpDown, MapPin, Search, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Modal, Button, Badge, Card, CardContent, Select } from '@/components/ui';
 import { Producto } from '@/types';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
-import { getAllClients, getClientPriceHistory, ClientListItem, PriceHistoryItem } from '@/services/clients';
+import { useDebounce } from '@/lib/hooks';
+import { getClients, getClientPriceHistory, ClientDetail, PriceHistoryItem } from '@/services/clients';
 import { updateProduct, UpdateProductDto, getCategories, CategoryDto } from '@/services/products';
 import type { ApiProductDetail, ApiProductSupplier, ApiProductPurchaseHistory } from '@/services/products';
 import { getProductPriceTiers, ProductPriceTier } from '@/services/price-zones';
@@ -21,6 +22,159 @@ interface ProductDetailModalProps {
   onSuccess?: (message: string) => void;
 }
 
+const CLIENTS_PER_PAGE = 8;
+
+interface ClientPickerModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSelect: (client: ClientDetail) => void;
+}
+
+function ClientPickerModal({ isOpen, onClose, onSelect }: ClientPickerModalProps) {
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [clients, setClients] = useState<ClientDetail[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  const debouncedSearch = useDebounce(search, 350);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setSearch('');
+    setPage(1);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    setLoading(true);
+    getClients({
+      page,
+      limit: CLIENTS_PER_PAGE,
+      search: debouncedSearch || undefined,
+    })
+      .then((res) => {
+        setClients(res.items);
+        setTotalPages(res.totalPages || 1);
+        setTotal(res.total);
+      })
+      .catch(() => {
+        setClients([]);
+        setTotalPages(1);
+        setTotal(0);
+      })
+      .finally(() => setLoading(false));
+  }, [isOpen, page, debouncedSearch]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      <div className="fixed inset-0 z-[80] bg-black/40" onClick={onClose} />
+      <div className="fixed z-[90] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] max-w-[calc(100vw-2rem)] max-h-[80vh] flex flex-col bg-white rounded-2xl shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <User className="w-4 h-4 text-gray-600" />
+            <h3 className="text-sm font-semibold text-gray-900">Seleccionar cliente</h3>
+            {!loading && <span className="text-xs text-gray-400">{total} clientes</span>}
+          </div>
+          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+            <X className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
+
+        <div className="px-4 py-3 border-b border-gray-100">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              autoFocus
+              type="text"
+              placeholder="Buscar por nombre, teléfono..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            />
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-3 py-2 min-h-0">
+          {loading ? (
+            <div className="flex items-center justify-center py-10">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500" />
+            </div>
+          ) : clients.length === 0 ? (
+            <div className="text-center py-10 text-sm text-gray-400">Sin resultados</div>
+          ) : (
+            <div className="space-y-1">
+              {clients.map((client) => (
+                <button
+                  key={client.id}
+                  onClick={() => {
+                    onSelect(client);
+                    onClose();
+                  }}
+                  className="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                >
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-white bg-blue-600">
+                    {client.name.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 truncate">{client.name}</p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      {client.phone && (
+                        <span className="text-[11px] text-gray-400">{client.phone}</span>
+                      )}
+                      {client.address && (
+                        <span className="text-[11px] text-gray-400 truncate max-w-[160px]">{client.address}</span>
+                      )}
+                    </div>
+                  </div>
+                  {client.priceZone ? (
+                    <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700">
+                      <MapPin className="w-2.5 h-2.5" />
+                      {client.priceZone.label}
+                    </span>
+                  ) : (
+                    <span className="flex-shrink-0 text-[11px] text-gray-300 italic">Sin zona</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {totalPages > 1 && (
+          <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+            <span className="text-xs text-gray-500">Pág. {page} de {totalPages}</span>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                disabled={page <= 1}
+                className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={page >= totalPages}
+                className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
 export function ProductDetailModal({ 
   producto, 
   rawDetail,
@@ -33,9 +187,9 @@ export function ProductDetailModal({
   const [isEditing, setIsEditing] = useState(false);
   const [editedProduct, setEditedProduct] = useState<Producto | null>(null);
   const [selectedClienteId, setSelectedClienteId] = useState<string>('');
-  const [clientes, setClientes] = useState<ClientListItem[]>([]);
+  const [selectedCliente, setSelectedCliente] = useState<ClientDetail | null>(null);
+  const [isClientPickerOpen, setIsClientPickerOpen] = useState(false);
   const [historialPrecios, setHistorialPrecios] = useState<PriceHistoryItem[]>([]);
-  const [loadingClientes, setLoadingClientes] = useState(false);
   const [loadingHistorial, setLoadingHistorial] = useState(false);
   const [saving, setSaving] = useState(false);
   const [categorias, setCategorias] = useState<CategoryDto[]>([]);
@@ -43,10 +197,9 @@ export function ProductDetailModal({
   const [priceTiers, setPriceTiers] = useState<ProductPriceTier[]>([]);
   const [loadingTiers, setLoadingTiers] = useState(false);
 
-  // Cargar lista de clientes, categorías y price tiers cuando se abre el modal
+  // Cargar categorías cuando se abre el modal
   useEffect(() => {
     if (isOpen) {
-      loadClientes();
       loadCategorias();
     }
   }, [isOpen]);
@@ -77,6 +230,13 @@ export function ProductDetailModal({
     }
   }, [selectedClienteId, producto]);
 
+  useEffect(() => {
+    if (isOpen) return;
+    setSelectedClienteId('');
+    setSelectedCliente(null);
+    setHistorialPrecios([]);
+  }, [isOpen]);
+
   const loadCategorias = async () => {
     setLoadingCategorias(true);
     try {
@@ -86,18 +246,6 @@ export function ProductDetailModal({
       console.error('Error cargando categorías:', error);
     } finally {
       setLoadingCategorias(false);
-    }
-  };
-
-  const loadClientes = async () => {
-    setLoadingClientes(true);
-    try {
-      const data = await getAllClients();
-      setClientes(data);
-    } catch (error) {
-      console.error('Error cargando clientes:', error);
-    } finally {
-      setLoadingClientes(false);
     }
   };
 
@@ -112,6 +260,18 @@ export function ProductDetailModal({
     } finally {
       setLoadingHistorial(false);
     }
+  };
+
+  const handleSelectCliente = (client: ClientDetail) => {
+    setSelectedCliente(client);
+    setSelectedClienteId(String(client.id));
+    setHistorialPrecios([]);
+  };
+
+  const handleClearSelectedCliente = () => {
+    setSelectedClienteId('');
+    setSelectedCliente(null);
+    setHistorialPrecios([]);
   };
 
   if (!producto) return null;
@@ -198,8 +358,6 @@ export function ProductDetailModal({
     (a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime()
   );
 
-  const clienteSeleccionado = clientes.find(c => String(c.id) === selectedClienteId);
-
   const currentProduct = isEditing && editedProduct ? editedProduct : producto;
 
   return (
@@ -210,6 +368,12 @@ export function ProductDetailModal({
       size="2xl"
     >
       <div className="space-y-6">
+        <ClientPickerModal
+          isOpen={isClientPickerOpen}
+          onClose={() => setIsClientPickerOpen(false)}
+          onSelect={handleSelectCliente}
+        />
+
         {/* Fila superior: Imagen + Información básica */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Imagen del producto */}
@@ -643,18 +807,51 @@ export function ProductDetailModal({
             </h3>
             
             <div className="mb-3">
-              <Select
-                value={selectedClienteId}
-                onChange={(e) => setSelectedClienteId(e.target.value)}
-                disabled={loadingClientes}
-              >
-                <option value="">-- Seleccione un cliente --</option>
-                {clientes.map((cliente) => (
-                  <option key={cliente.id} value={cliente.id}>
-                    {cliente.name}
-                  </option>
-                ))}
-              </Select>
+              {selectedCliente ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg border border-blue-100">
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-gray-900 text-sm truncate">
+                        {selectedCliente.name}
+                      </p>
+                      {selectedCliente.priceZone && (
+                        <p className="text-xs text-blue-600 truncate">{selectedCliente.priceZone.label}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => setIsClientPickerOpen(true)}
+                    >
+                      Cambiar cliente
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleClearSelectedCliente}
+                    >
+                      Limpiar
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsClientPickerOpen(true)}
+                  className="w-full flex items-center justify-between px-3 py-2.5 border border-dashed border-gray-300 rounded-xl text-sm text-gray-500 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
+                >
+                  <span className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-gray-400" />
+                    Seleccionar cliente...
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </button>
+              )}
             </div>
 
             {loadingHistorial && (
@@ -663,19 +860,8 @@ export function ProductDetailModal({
               </div>
             )}
 
-            {selectedClienteId && clienteSeleccionado && !loadingHistorial ? (
+            {selectedClienteId && selectedCliente && !loadingHistorial ? (
               <div className="space-y-3">
-                <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg border border-blue-100">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <User className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-gray-900 text-sm truncate">
-                      {clienteSeleccionado.name}
-                    </p>
-                  </div>
-                </div>
-
                 {historialFiltrado.length > 0 ? (
                   <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
                     {historialFiltrado.map((item) => (

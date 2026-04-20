@@ -159,12 +159,23 @@ export function PurchaseOrderTable({
   const handleStatusChangeOrReception = async (order: PurchaseOrder, newStatus: PurchaseOrderStatus) => {
     if (newStatus === 'partial' || newStatus === 'received') {
       // Cargar detalle completo para tener items actualizados
+      let full: PurchaseOrder;
       try {
-        const full = await getPurchaseOrderById(order.id);
-        setReceptionOrder(full);
+        full = await getPurchaseOrderById(order.id);
       } catch {
-        setReceptionOrder(order);
+        full = order;
       }
+
+      // Si no hay ítems pendientes, cambiar estado directamente sin abrir el modal
+      const hasPendingItems = full.items.some((i) => i.qty - i.qtyReceived > 0);
+      if (!hasPendingItems) {
+        if (onOrderStatusChange) {
+          await onOrderStatusChange(order.id, newStatus);
+        }
+        return;
+      }
+
+      setReceptionOrder(full);
       setIsReceptionModalOpen(true);
       return;
     }
@@ -305,6 +316,22 @@ export function PurchaseOrderTable({
                       {(() => {
                         const totalQty = order.items.reduce((s, i) => s + i.qty, 0);
                         const totalRec = order.items.reduce((s, i) => s + i.qtyReceived, 0);
+
+                        // OC sin ítems marcada como recibida → barra completa
+                        if (totalQty === 0 && order.status === 'received') {
+                          return (
+                            <div className="min-w-[80px]">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[10px] text-green-600 font-medium">Completa</span>
+                                <span className="text-[10px] font-medium text-green-600">100%</span>
+                              </div>
+                              <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                <div className="h-full rounded-full bg-green-500 w-full" />
+                              </div>
+                            </div>
+                          );
+                        }
+
                         const pct = totalQty > 0 ? Math.round((totalRec / totalQty) * 100) : 0;
                         const barColor =
                           pct === 0

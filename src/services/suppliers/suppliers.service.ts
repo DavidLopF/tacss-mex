@@ -94,6 +94,7 @@ interface RawPurchaseOrder {
   supplierId: number;
   statusId: number;
   statusCode?: string;
+  status?: { id: number; code: string; label: string };
   currency: string;
   subtotal: string | number;
   tax: string | number;
@@ -157,7 +158,7 @@ function parsePurchaseOrder(raw: RawPurchaseOrder): PurchaseOrder {
     supplierName: raw.supplier?.name ?? '',
     supplier: raw.supplier,
     statusId: raw.statusId,
-    status: resolveStatus(raw.statusId, raw.statusCode),
+    status: resolveStatus(raw.statusId, raw.statusCode ?? raw.status?.code),
     subtotal,
     tax: parseFloat(String(raw.tax)) || 0,
     total: parseFloat(String(raw.total)) || 0,

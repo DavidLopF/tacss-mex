@@ -57,12 +57,31 @@ export async function getClients(filters: ClientFiltersDto = {}): Promise<Pagina
 
 /**
  * Obtener lista simple de todos los clientes (para selects/dropdowns)
- * GET /api/clients
+ * Compatibilidad para componentes que esperan lista completa sin paginación.
  */
 export async function getAllClients(): Promise<ClientListItem[]> {
   try {
-    const response = await get<ClientListItem[]>(`${BASE_PATH}`);
-    return response;
+    const limit = 200;
+    let page = 1;
+    let totalPages = 1;
+    const allClients: ClientListItem[] = [];
+
+    while (page <= totalPages) {
+      const response = await getClients({ page, limit });
+      allClients.push(
+        ...response.items.map((client) => ({
+          id: client.id,
+          name: client.name,
+          priceZoneId: client.priceZoneId,
+          priceZone: client.priceZone,
+        }))
+      );
+
+      totalPages = response.totalPages || 1;
+      page += 1;
+    }
+
+    return allClients;
   } catch (err) {
     console.error('Error al obtener clientes:', err);
     throw err;
