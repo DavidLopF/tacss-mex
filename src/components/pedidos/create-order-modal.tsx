@@ -23,7 +23,7 @@ function resolveZoneTier(
   zoneCode: string,
   qty: number
 ): { price: number; label: string; minQty: number } | null {
-  const zoneData = tiers.find(t => t.zone.code === zoneCode);
+  const zoneData = tiers.find(t => t.zone?.code === zoneCode);
   if (!zoneData || zoneData.tiers.length === 0) return null;
   const sorted = [...zoneData.tiers].sort((a, b) => b.minQty - a.minQty);
   const match = sorted.find(t => qty >= t.minQty);
@@ -35,7 +35,7 @@ function nextZoneTier(
   zoneCode: string,
   qty: number
 ): { minQty: number; price: number; label: string } | null {
-  const zoneData = tiers.find(t => t.zone.code === zoneCode);
+  const zoneData = tiers.find(t => t.zone?.code === zoneCode);
   if (!zoneData) return null;
   const sorted = [...zoneData.tiers].sort((a, b) => a.minQty - b.minQty);
   const t = sorted.find(t => t.minQty > qty);
@@ -460,8 +460,8 @@ interface ZoneVariantChipsProps {
 function ZoneVariantChips({ product, tiers, allCategoryDiscounts, clientZoneCode, qty, primary, onJumpToTier }: ZoneVariantChipsProps) {
   const [showOther, setShowOther] = useState(false);
   const pricing = computeProductPrice(product.price, tiers, allCategoryDiscounts, product.category, clientZoneCode, qty);
-  const clientZoneData = tiers.find(t => t.zone.code === clientZoneCode);
-  const otherZones = tiers.filter(t => t.zone.code !== clientZoneCode);
+  const clientZoneData = tiers.find(t => t.zone?.code === clientZoneCode);
+  const otherZones = tiers.filter(t => t.zone?.code !== clientZoneCode);
 
   if (!clientZoneData) return null;
 
@@ -589,7 +589,7 @@ interface ZoneVariantPriceBookProps {
 
 function ZoneVariantPriceBook({ product, tiers, allCategoryDiscounts, clientZoneCode, qty, primary, onClose, onAdd }: ZoneVariantPriceBookProps) {
   const pricing = computeProductPrice(product.price, tiers, allCategoryDiscounts, product.category, clientZoneCode, qty);
-  const clientZoneData = tiers.find(t => t.zone.code === clientZoneCode);
+  const clientZoneData = tiers.find(t => t.zone?.code === clientZoneCode);
 
   return (
     <div className="fixed inset-0 z-[80]">
@@ -1008,7 +1008,7 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
       precioFinal = pricing.finalPrice;
       suggestedPrice = pricing.finalPrice;
       if (pricing.tierLabel) {
-        const zone = tiers.find(t => t.zone.code === zoneCode)?.zone;
+        const zone = tiers.find(t => t.zone?.code === zoneCode)?.zone;
         zoneTierLabel = `${zone?.label ?? zoneCode} — ${pricing.tierLabel}`;
       }
       if (pricing.catDiscount) {
