@@ -100,6 +100,11 @@ export interface ApiVariant {
   available: number;
   status: string;
   warehouses: ApiWarehouse[];
+  blDescription?: string | null;
+  color?: string | null;
+  masterBox?: number | null;
+  packingUnit?: string | null;
+  purchaseUnit?: string | null;
 }
 
 export interface ApiProductDetail {
@@ -189,11 +194,16 @@ export interface CreateProductDto {
 
 // ── Actualizar producto ─────────────────────────────────────────────
 export interface UpdateProductVariantDto {
-  id?: number;           // Si tiene id, se actualiza. Si no, se crea nueva
+  id?: number;
   variantName: string;
   stock: number;
   sku?: string;
   warehouseId?: number;
+  blDescription?: string | null;
+  color?: string | null;
+  masterBox?: number | null;
+  packingUnit?: string | null;
+  purchaseUnit?: string | null;
 }
 
 export interface UpdateProductDto {

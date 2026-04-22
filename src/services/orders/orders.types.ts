@@ -41,6 +41,11 @@ export interface OrderProductItem {
   currency: string;
   isActive: boolean;
   warehouses: OrderProductWarehouse[];
+  blDescription?: string | null;
+  color?: string | null;
+  masterBox?: number | null;
+  packingUnit?: string | null;
+  purchaseUnit?: string | null;
 }
 
 export type StockStatusFilter = 'all' | 'in-stock' | 'low-stock' | 'out-of-stock';

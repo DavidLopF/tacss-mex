@@ -1385,6 +1385,27 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
                             {' · Stock: '}<b className="text-gray-600">{producto.stock}</b>
                           </p>
 
+                          {/* Extra variant fields */}
+                          {(producto.color || producto.masterBox != null || producto.packingUnit || producto.purchaseUnit || producto.blDescription) && (
+                            <div className="flex flex-wrap gap-1 mt-0.5">
+                              {producto.color && (
+                                <span className="inline-flex items-center px-1.5 py-0 rounded text-[10px] bg-pink-50 text-pink-600 font-medium">{producto.color}</span>
+                              )}
+                              {producto.masterBox != null && (
+                                <span className="inline-flex items-center px-1.5 py-0 rounded text-[10px] bg-amber-50 text-amber-600 font-medium">Caja×{producto.masterBox}</span>
+                              )}
+                              {producto.packingUnit && (
+                                <span className="inline-flex items-center px-1.5 py-0 rounded text-[10px] bg-blue-50 text-blue-600 font-medium">{producto.packingUnit}</span>
+                              )}
+                              {producto.purchaseUnit && (
+                                <span className="inline-flex items-center px-1.5 py-0 rounded text-[10px] bg-purple-50 text-purple-600 font-medium">{producto.purchaseUnit}</span>
+                              )}
+                              {producto.blDescription && (
+                                <span className="w-full text-[10px] text-gray-400 italic truncate">{producto.blDescription}</span>
+                              )}
+                            </div>
+                          )}
+
                           {/* Precio + chips de descuento */}
                           <div className="flex items-center flex-wrap gap-1.5 mt-1">
                             <div className="flex items-baseline gap-1.5">

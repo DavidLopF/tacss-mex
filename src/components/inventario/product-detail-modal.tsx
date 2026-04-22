@@ -12,6 +12,14 @@ import { updateProduct, UpdateProductDto, getCategories, CategoryDto } from '@/s
 import type { ApiProductDetail, ApiProductSupplier, ApiProductPurchaseHistory } from '@/services/products';
 import { getProductPriceTiers, ProductPriceTier } from '@/services/price-zones';
 
+interface VariantExtrasState {
+  blDescription: string;
+  color: string;
+  masterBox: string;
+  packingUnit: string;
+  purchaseUnit: string;
+}
+
 interface ProductDetailModalProps {
   producto: Producto | null;
   rawDetail?: ApiProductDetail | null;
@@ -197,6 +205,8 @@ export function ProductDetailModal({
   const [priceTiers, setPriceTiers] = useState<ProductPriceTier[]>([]);
   const [loadingTiers, setLoadingTiers] = useState(false);
 
+  const [variantExtras, setVariantExtras] = useState<Record<number, VariantExtrasState>>({});
+
   // Cargar categorías cuando se abre el modal
   useEffect(() => {
     if (isOpen) {
@@ -279,8 +289,22 @@ export function ProductDetailModal({
   const handleEditToggle = () => {
     if (isEditing) {
       setEditedProduct(null);
+      setVariantExtras({});
     } else {
       setEditedProduct({ ...producto });
+      if (rawDetail?.variants) {
+        const init: Record<number, VariantExtrasState> = {};
+        for (const v of rawDetail.variants) {
+          init[v.id] = {
+            blDescription: v.blDescription ?? '',
+            color: v.color ?? '',
+            masterBox: v.masterBox != null ? String(v.masterBox) : '',
+            packingUnit: v.packingUnit ?? '',
+            purchaseUnit: v.purchaseUnit ?? '',
+          };
+        }
+        setVariantExtras(init);
+      }
     }
     setIsEditing(!isEditing);
   };
@@ -301,11 +325,22 @@ export function ProductDetailModal({
         price: editedProduct.precio,
         image: editedProduct.imageUrl,
         isActive: editedProduct.activo,
-        variants: editedProduct.variaciones.map(v => ({
-          id: isNaN(Number(v.id)) ? undefined : Number(v.id),
-          variantName: v.nombre ? `${v.nombre}: ${v.valor}` : v.valor,
-          stock: v.stock,
-        })),
+        variants: editedProduct.variaciones.map(v => {
+          const numId = isNaN(Number(v.id)) ? undefined : Number(v.id);
+          const extras = numId != null ? variantExtras[numId] : undefined;
+          return {
+            id: numId,
+            variantName: v.nombre ? `${v.nombre}: ${v.valor}` : v.valor,
+            stock: v.stock,
+            ...(extras && {
+              blDescription: extras.blDescription || null,
+              color: extras.color || null,
+              masterBox: extras.masterBox !== '' ? Number(extras.masterBox) : null,
+              packingUnit: extras.packingUnit || null,
+              purchaseUnit: extras.purchaseUnit || null,
+            }),
+          };
+        }),
       };
 
       // Llamar al backend
@@ -742,60 +777,95 @@ export function ProductDetailModal({
               Variaciones y Stock
             </h3>
             <div className="space-y-2">
-              {currentProduct.variaciones.map((variacion) => (
-                <Card key={variacion.id}>
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <span className="font-medium text-gray-900 text-sm">
-                          {variacion.nombre}: {variacion.valor}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        {isEditing ? (
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => handleVariationStockChange(variacion.id, variacion.stock - 1)}
-                              className="p-1 hover:bg-gray-100 rounded"
-                            >
-                              <Minus className="w-3 h-3 text-gray-600" />
-                            </button>
-                            <input
-                              type="number"
-                              value={variacion.stock}
-                              onChange={(e) => handleVariationStockChange(variacion.id, parseInt(e.target.value) || 0)}
-                              className="w-14 text-center border border-gray-200 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              min="0"
-                            />
-                            <button
-                              onClick={() => handleVariationStockChange(variacion.id, variacion.stock + 1)}
-                              className="p-1 hover:bg-gray-100 rounded"
-                            >
-                              <Plus className="w-3 h-3 text-gray-600" />
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-sm font-semibold text-gray-900">
-                            {variacion.stock} uds
+              {currentProduct.variaciones.map((variacion, vIdx) => {
+                const numId = isNaN(Number(variacion.id)) ? null : Number(variacion.id);
+                const raw = rawDetail?.variants[vIdx];
+                const extras = numId != null ? variantExtras[numId] : undefined;
+
+                return (
+                  <Card key={variacion.id}>
+                    <CardContent className="p-3 space-y-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                          <span className="font-medium text-gray-900 text-sm">
+                            {variacion.nombre}: {variacion.valor}
                           </span>
-                        )}
-                        
-                        <Badge 
-                          variant={
-                            variacion.stock === 0 ? 'danger' : 
-                            variacion.stock <= 5 ? 'warning' : 'success'
-                          }
-                        >
-                          {variacion.stock === 0 ? 'Agotado' : 
-                           variacion.stock <= 5 ? 'Bajo' : 'Disponible'}
-                        </Badge>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {isEditing ? (
+                            <div className="flex items-center gap-1">
+                              <button onClick={() => handleVariationStockChange(variacion.id, variacion.stock - 1)} className="p-1 hover:bg-gray-100 rounded">
+                                <Minus className="w-3 h-3 text-gray-600" />
+                              </button>
+                              <input
+                                type="number"
+                                value={variacion.stock}
+                                onChange={(e) => handleVariationStockChange(variacion.id, parseInt(e.target.value) || 0)}
+                                className="w-14 text-center border border-gray-200 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                min="0"
+                              />
+                              <button onClick={() => handleVariationStockChange(variacion.id, variacion.stock + 1)} className="p-1 hover:bg-gray-100 rounded">
+                                <Plus className="w-3 h-3 text-gray-600" />
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-sm font-semibold text-gray-900">{variacion.stock} uds</span>
+                          )}
+                          <Badge variant={variacion.stock === 0 ? 'danger' : variacion.stock <= 5 ? 'warning' : 'success'}>
+                            {variacion.stock === 0 ? 'Agotado' : variacion.stock <= 5 ? 'Bajo' : 'Disponible'}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+
+                      {/* Extra fields */}
+                      {isEditing && extras && numId != null ? (
+                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
+                          {([
+                            { key: 'blDescription', label: 'Desc. BL', type: 'text' },
+                            { key: 'color', label: 'Color', type: 'text' },
+                            { key: 'masterBox', label: 'Master Box', type: 'number' },
+                            { key: 'packingUnit', label: 'Unidad de empaque', type: 'text' },
+                            { key: 'purchaseUnit', label: 'Unidad de compra', type: 'text' },
+                          ] as const).map(field => (
+                            <div key={field.key} className={field.key === 'blDescription' ? 'col-span-2' : ''}>
+                              <label className="block text-[10px] text-gray-500 mb-0.5">{field.label}</label>
+                              <input
+                                type={field.type}
+                                value={extras[field.key]}
+                                onChange={e => setVariantExtras(prev => ({
+                                  ...prev,
+                                  [numId]: { ...prev[numId], [field.key]: e.target.value },
+                                }))}
+                                placeholder="—"
+                                className="w-full px-2 py-1 border border-gray-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      ) : raw && (raw.blDescription || raw.color || raw.masterBox != null || raw.packingUnit || raw.purchaseUnit) ? (
+                        <div className="flex flex-wrap gap-1.5 pt-2 border-t border-gray-100">
+                          {raw.color && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-pink-50 text-pink-700 font-medium">Color: {raw.color}</span>
+                          )}
+                          {raw.masterBox != null && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-amber-50 text-amber-700 font-medium">Caja: {raw.masterBox} uds</span>
+                          )}
+                          {raw.packingUnit && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-blue-50 text-blue-700 font-medium">Empaque: {raw.packingUnit}</span>
+                          )}
+                          {raw.purchaseUnit && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-purple-50 text-purple-700 font-medium">Compra: {raw.purchaseUnit}</span>
+                          )}
+                          {raw.blDescription && (
+                            <span className="w-full text-[11px] text-gray-500 italic truncate">{raw.blDescription}</span>
+                          )}
+                        </div>
+                      ) : null}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
 
