@@ -4,3 +4,6 @@ export { InventoryStats } from './inventory-stats';
 export { ProductDetailModal } from './product-detail-modal';
 export { CreateProductModal } from './create-product-modal';
 export { DeleteConfirmModal } from './delete-confirm-modal';
+export { BulkImportModal } from './bulk-import-modal';
+export { BulkEditModal } from './bulk-edit-modal';
+export { BulkStockModal } from './bulk-stock-modal';

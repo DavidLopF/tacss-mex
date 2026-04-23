@@ -6,7 +6,38 @@ import {
   CategoryDiscount,
   CreateCategoryDiscountDto,
   UpdateCategoryDiscountDto,
+  PriceZone,
+  UpdatePriceZoneDto,
 } from './discounts.types';
+
+// ── Price Zones ─────────────────────────────────────────────────────
+
+export async function getPriceZones(): Promise<PriceZone[]> {
+  return get<PriceZone[]>('/api/price-zones?withMultipliers=true');
+}
+
+export async function updatePriceZone(id: number, dto: UpdatePriceZoneDto): Promise<PriceZone> {
+  return put<PriceZone>(`/api/price-zones/${id}`, dto);
+}
+
+// ── Bulk Category Discounts ─────────────────────────────────────────
+
+export interface BulkUpsertDiscountItem {
+  id?: number;
+  _delete?: boolean;
+  categoryId: number;
+  minQty: number;
+  discountPercent: number;
+  label?: string;
+  isActive?: boolean;
+  sortOrder?: number;
+}
+
+export async function bulkUpsertCategoryDiscounts(
+  discounts: BulkUpsertDiscountItem[],
+): Promise<{ upserted: number; deleted: number; errors: { index: number; reason: string }[] }> {
+  return post('/api/category-discounts/bulk-upsert', { discounts });
+}
 
 // ── Price Tiers ─────────────────────────────────────────────────────
 export async function getVariantPriceTiers(variantId: number): Promise<PriceTierItem[]> {

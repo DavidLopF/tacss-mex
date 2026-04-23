@@ -1,4 +1,4 @@
-import { get, post, put } from '@/services/http-client';
+import { get, post, put, del } from '@/services/http-client';
 import {
   ProductFiltersDto,
   PaginatedProductsDto,
@@ -145,6 +145,57 @@ export async function createProduct(productData: CreateProductDto): Promise<ApiP
     console.error('Error al crear producto:', err);
     throw err;
   }
+}
+
+/**
+ * Importación masiva de productos desde Excel (ya parseado).
+ * POST /api/products/bulk-import
+ */
+export async function bulkImportProducts(rows: {
+  name: string;
+  sku: string;
+  defaultPrice: number;
+  categoryName: string;
+  description?: string;
+  variantName?: string;
+  barcode?: string;
+  stock?: number;
+  currency?: string;
+  requiresIva?: boolean;
+}[]): Promise<{ created: number; errors: { sku: string; reason: string }[] }> {
+  return post<{ created: number; errors: { sku: string; reason: string }[] }>(
+    `${BASE_PATH}/bulk-import`,
+    { rows },
+  );
+}
+
+/**
+ * Edición masiva de productos por IDs.
+ * POST /api/products/bulk-edit
+ */
+export async function bulkEditProducts(
+  ids: number[],
+  patch: { categoryId?: number; defaultPrice?: number; isActive?: boolean; requiresIva?: boolean },
+): Promise<{ updated: number; errors: { id: number; reason: string }[] }> {
+  return post<{ updated: number; errors: { id: number; reason: string }[] }>(
+    `${BASE_PATH}/bulk-edit`,
+    { ids, patch },
+  );
+}
+
+/**
+ * Ajuste masivo de existencias vía OC (Excel parseado).
+ * POST /api/products/bulk-stock-oc
+ */
+export async function bulkStockFromOC(rows: {
+  sku: string;
+  qty: number;
+  adjustmentType: 'set' | 'increment';
+}[]): Promise<{ updated: number; errors: { sku: string; reason: string }[] }> {
+  return post<{ updated: number; errors: { sku: string; reason: string }[] }>(
+    `${BASE_PATH}/bulk-stock-oc`,
+    { rows },
+  );
 }
 
 /**

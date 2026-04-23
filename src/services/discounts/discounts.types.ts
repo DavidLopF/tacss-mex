@@ -1,3 +1,21 @@
+// ── Price Zones ──────────────────────────────────────────────────────
+export interface PriceZone {
+  id: number;
+  code: string;
+  label: string;
+  wholesaleMultiplier: number;
+  superWholesaleMultiplier: number;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export interface UpdatePriceZoneDto {
+  label?: string;
+  wholesaleMultiplier?: number;
+  superWholesaleMultiplier?: number;
+  isActive?: boolean;
+}
+
 // ── Price Tiers (by variant) ────────────────────────────────────────
 export interface PriceTierItem {
   id: number;

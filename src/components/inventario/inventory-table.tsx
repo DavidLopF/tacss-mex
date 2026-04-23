@@ -2,11 +2,17 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Search, Plus, Edit, Eye, Trash2, Package, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Search, Plus, Edit, Eye, Trash2, Package,
+  ChevronLeft, ChevronRight, Upload, BarChart2, ChevronDown,
+} from 'lucide-react';
 import { Card, Button, Badge } from '@/components/ui';
 import { ProductDetailModal } from './product-detail-modal';
 import { CreateProductModal } from './create-product-modal';
 import { DeleteConfirmModal } from './delete-confirm-modal';
+import { BulkImportModal } from './bulk-import-modal';
+import { BulkEditModal } from './bulk-edit-modal';
+import { BulkStockModal } from './bulk-stock-modal';
 import { Producto } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 import { getProductById } from '@/services/products';
@@ -33,8 +39,8 @@ interface InventoryTableProps {
   canDelete?: boolean;
 }
 
-export function InventoryTable({ 
-  productos, 
+export function InventoryTable({
+  productos,
   onProductUpdate,
   onProductCreate,
   onProductDelete,
@@ -63,6 +69,13 @@ export function InventoryTable({
   const [loadingDetail, setLoadingDetail] = useState(false);
   const itemsPerPage = 10;
 
+  // ── Acciones masivas ────────────────────────────────────────────────────────
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkMenuOpen, setIsBulkMenuOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
+  const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
+  const [isBulkStockOpen, setIsBulkStockOpen] = useState(false);
+
   const isControlledSearch = typeof externalSearch === 'string' && typeof onSearchChange === 'function';
   const searchTerm = isControlledSearch ? externalSearch! : internalSearch;
 
@@ -84,9 +97,30 @@ export function InventoryTable({
   
   // Si estamos en modo server-driven (externalItemsPerPage definido), no hacemos slice local
   // porque el backend ya nos mandó solo los items de la página actual
-  const currentProducts = externalItemsPerPage 
-    ? filteredProducts 
+  const currentProducts = externalItemsPerPage
+    ? filteredProducts
     : filteredProducts.slice((currentPage - 1) * effectiveItemsPerPage, currentPage * effectiveItemsPerPage);
+
+  // ── Helpers de selección (necesitan currentProducts) ──────────────────────
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === currentProducts.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(currentProducts.map((p) => p.id)));
+    }
+  };
+
+  const bulkSelectedProducts = currentProducts.filter((p) => selectedIds.has(p.id));
+  const allCurrentSelected = currentProducts.length > 0 && selectedIds.size === currentProducts.length;
+  const someSelected = selectedIds.size > 0;
 
   const getStockStatus = (stock: number) => {
     if (stock === 0) return { variant: 'danger' as const, label: 'Agotado' };
@@ -190,7 +224,7 @@ export function InventoryTable({
               }}
             />
           </div>
-          
+
           <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
             {categories.slice(0, 6).map((category) => (
               <button
@@ -208,19 +242,101 @@ export function InventoryTable({
           </div>
         </div>
 
-        {canCreate && (
-        <Button className="flex items-center gap-2" onClick={() => setIsCreateModalOpen(true)}>
-          <Plus className="w-4 h-4" />
-          Nuevo Producto
-        </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Dropdown Acciones Masivas */}
+          <div className="relative">
+            <button
+              onClick={() => setIsBulkMenuOpen((v) => !v)}
+              className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <BarChart2 className="w-4 h-4 text-gray-500" />
+              Acciones masivas
+              <ChevronDown className="w-3 h-3 text-gray-400" />
+            </button>
+
+            {isBulkMenuOpen && (
+              <div
+                className="absolute right-0 mt-1 w-56 bg-white border border-gray-100 rounded-xl shadow-lg z-20 py-1"
+                onBlur={() => setIsBulkMenuOpen(false)}
+              >
+                <button
+                  onClick={() => { setIsBulkMenuOpen(false); setIsBulkImportOpen(true); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <Upload className="w-4 h-4 text-blue-500" />
+                  Cargue masivo de productos
+                </button>
+                <button
+                  onClick={() => {
+                    if (selectedIds.size === 0) { onError?.('Selecciona al menos un producto'); return; }
+                    setIsBulkMenuOpen(false);
+                    setIsBulkEditOpen(true);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <Edit className="w-4 h-4 text-indigo-500" />
+                  Edición masiva
+                  {someSelected && (
+                    <span className="ml-auto text-xs bg-indigo-100 text-indigo-700 rounded-full px-1.5 py-0.5">
+                      {selectedIds.size}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => { setIsBulkMenuOpen(false); setIsBulkStockOpen(true); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <BarChart2 className="w-4 h-4 text-emerald-500" />
+                  Ajuste de stock por OC
+                </button>
+              </div>
+            )}
+          </div>
+
+          {canCreate && (
+            <Button className="flex items-center gap-2" onClick={() => setIsCreateModalOpen(true)}>
+              <Plus className="w-4 h-4" />
+              Nuevo Producto
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* Barra de selección activa */}
+      {someSelected && (
+        <div className="flex items-center gap-3 px-4 py-2.5 bg-indigo-50 border border-indigo-100 rounded-xl text-sm">
+          <span className="font-medium text-indigo-800">{selectedIds.size} producto(s) seleccionado(s)</span>
+          <div className="h-4 w-px bg-indigo-200" />
+          {canEdit && (
+            <button
+              onClick={() => setIsBulkEditOpen(true)}
+              className="text-indigo-700 hover:text-indigo-900 font-medium"
+            >
+              Editar selección
+            </button>
+          )}
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="ml-auto text-indigo-400 hover:text-indigo-700 text-xs"
+          >
+            Limpiar selección
+          </button>
+        </div>
+      )}
 
       <Card>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-100">
+                <th className="px-4 py-4 w-10">
+                  <input
+                    type="checkbox"
+                    checked={allCurrentSelected}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer"
+                  />
+                </th>
                 <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-4">
                   Producto
                 </th>
@@ -247,9 +363,21 @@ export function InventoryTable({
             <tbody className="divide-y divide-gray-100">
               {currentProducts.map((producto) => {
                 const stockStatus = getStockStatus(producto.stockTotal);
-                
+                const isSelected = selectedIds.has(producto.id);
+
                 return (
-                  <tr key={producto.id} className="hover:bg-gray-50 transition-colors">
+                  <tr
+                    key={producto.id}
+                    className={`hover:bg-gray-50 transition-colors ${isSelected ? 'bg-indigo-50/40' : ''}`}
+                  >
+                    <td className="px-4 py-4 w-10">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleSelect(producto.id)}
+                        className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer"
+                      />
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
@@ -438,6 +566,36 @@ export function InventoryTable({
         onClose={handleCloseDeleteModal}
         onConfirm={handleConfirmDelete}
         producto={productToDelete}
+      />
+
+      {/* Modales de acciones masivas */}
+      <BulkImportModal
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
+        onSuccess={(created) => {
+          onSuccess?.(`${created} producto(s) importados exitosamente`);
+          setIsBulkImportOpen(false);
+        }}
+      />
+
+      <BulkEditModal
+        isOpen={isBulkEditOpen}
+        selectedProducts={bulkSelectedProducts}
+        onClose={() => setIsBulkEditOpen(false)}
+        onSuccess={(updated) => {
+          onSuccess?.(`${updated} producto(s) actualizados`);
+          setIsBulkEditOpen(false);
+          setSelectedIds(new Set());
+        }}
+      />
+
+      <BulkStockModal
+        isOpen={isBulkStockOpen}
+        onClose={() => setIsBulkStockOpen(false)}
+        onSuccess={(updated) => {
+          onSuccess?.(`Stock ajustado en ${updated} SKU(s)`);
+          setIsBulkStockOpen(false);
+        }}
       />
     </div>
   );

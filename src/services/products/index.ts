@@ -1,4 +1,8 @@
-export { getProducts, getStadistics, getProductById, getCategories, createProduct, updateProduct } from './products.service';
+export {
+  getProducts, getStadistics, getProductById, getCategories,
+  createProduct, updateProduct,
+  bulkImportProducts, bulkEditProducts, bulkStockFromOC,
+} from './products.service';
 export type { 
   ProductFiltersDto, 
   PaginatedProductsDto, 
