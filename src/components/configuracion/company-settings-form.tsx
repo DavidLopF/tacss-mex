@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Building2, Palette, Eye, RotateCcw } from 'lucide-react';
+import { Building2, Palette, Eye, RotateCcw, Percent } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { DEFAULT_COMPANY_SETTINGS } from '@/services/company';
 import type { CompanySettings, UpdateCompanySettingsDto } from '@/services/company';
@@ -32,19 +32,25 @@ export function CompanySettingsForm({ settings, onSave, submitting }: CompanySet
   const [companyName, setCompanyName] = useState(settings.companyName);
   const [primaryColor, setPrimaryColor] = useState(settings.primaryColor);
   const [accentColor, setAccentColor] = useState(settings.accentColor);
+  const [ivaPctRaw, setIvaPctRaw] = useState(String(settings.defaultIvaPct ?? DEFAULT_COMPANY_SETTINGS.defaultIvaPct ?? 16));
+
+  const ivaPct = parseFloat(ivaPctRaw);
+  const ivaValid = Number.isFinite(ivaPct) && ivaPct >= 0 && ivaPct <= 100;
 
   const hasChanges =
     companyName !== settings.companyName ||
     primaryColor !== settings.primaryColor ||
-    accentColor !== settings.accentColor;
+    accentColor !== settings.accentColor ||
+    (ivaValid && ivaPct !== (settings.defaultIvaPct ?? DEFAULT_COMPANY_SETTINGS.defaultIvaPct));
 
   const handleSubmit = () => {
-    if (!companyName.trim()) return;
+    if (!companyName.trim() || !ivaValid) return;
 
     const updates: UpdateCompanySettingsDto = {};
     if (companyName.trim() !== settings.companyName) updates.companyName = companyName.trim();
     if (primaryColor !== settings.primaryColor) updates.primaryColor = primaryColor;
     if (accentColor !== settings.accentColor) updates.accentColor = accentColor;
+    if (ivaPct !== (settings.defaultIvaPct ?? DEFAULT_COMPANY_SETTINGS.defaultIvaPct)) updates.defaultIvaPct = ivaPct;
 
     if (Object.keys(updates).length === 0) return;
     onSave(updates);
@@ -54,6 +60,7 @@ export function CompanySettingsForm({ settings, onSave, submitting }: CompanySet
     setPrimaryColor(DEFAULT_COMPANY_SETTINGS.primaryColor);
     setAccentColor(DEFAULT_COMPANY_SETTINGS.accentColor);
     setCompanyName(DEFAULT_COMPANY_SETTINGS.companyName);
+    setIvaPctRaw(String(DEFAULT_COMPANY_SETTINGS.defaultIvaPct ?? 16));
   };
 
   const handlePresetClick = (preset: { primary: string; accent: string }) => {
@@ -252,6 +259,45 @@ export function CompanySettingsForm({ settings, onSave, submitting }: CompanySet
             </div>
           </div>
         </div>
+      </section>
+
+      {/* ─── IVA por defecto ───────────────────────────────────── */}
+      <section className="rounded-2xl border border-gray-200/80 bg-white/90 p-7 shadow-sm backdrop-blur-sm">
+        <div className="mb-5 flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gray-100">
+            <Percent className="w-5 h-5 text-gray-600" />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold tracking-tight text-gray-900">IVA por defecto</h3>
+            <p className="text-sm text-gray-500">Tasa aplicada en pedidos y ventas cuando se activa el IVA</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 max-w-xs">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              inputMode="decimal"
+              value={ivaPctRaw}
+              onChange={e => {
+                if (/^(\d*\.?\d*)$/.test(e.target.value)) setIvaPctRaw(e.target.value);
+              }}
+              onBlur={() => {
+                if (!ivaValid) setIvaPctRaw(String(settings.defaultIvaPct ?? 16));
+                else setIvaPctRaw(String(ivaPct));
+              }}
+              className={`w-full rounded-xl border px-4 py-3 text-lg font-semibold tracking-tight focus:outline-none focus:ring-2 focus:ring-blue-500 ${!ivaValid ? 'border-red-300' : 'border-gray-200'}`}
+            />
+            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-lg font-semibold text-gray-400">%</span>
+          </div>
+          <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500">
+            Factor: {ivaValid ? (ivaPct / 100).toFixed(4) : '—'}
+          </div>
+        </div>
+        {!ivaValid && <p className="mt-2 text-xs text-red-500">Ingresa un porcentaje válido entre 0 y 100</p>}
+        <p className="mt-2 text-xs text-gray-400">
+          Ejemplos: 16 = IVA estándar México · 0 = sin IVA · 8 = IVA fronterizo
+        </p>
       </section>
 
       {/* ─── Acciones ───────────────────────────────────────────── */}

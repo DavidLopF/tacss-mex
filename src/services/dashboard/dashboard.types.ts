@@ -86,4 +86,8 @@ export interface DashboardSummary {
   topProducts: DashboardTopProduct[];
   recentOrders: DashboardRecentOrder[];
   lowStock: DashboardLowStockProduct[];
+  /** Valor total del inventario a precio de venta (stock × defaultPrice) */
+  inventoryValue?: number;
+  /** Valor total del inventario a costo de compra (stock × cost) — opcional */
+  inventoryValueAtCost?: number;
 }

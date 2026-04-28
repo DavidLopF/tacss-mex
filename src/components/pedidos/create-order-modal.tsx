@@ -16,6 +16,49 @@ import { getProductPriceTiers, getPriceZones, ProductPriceTier, PriceZone } from
 import { getCategoryDiscounts, CategoryDiscount } from '@/services/discounts';
 import { Pedido } from '@/types';
 
+// ── PriceInput: edición libre de precio sin forzar formato en cada tecla ──────
+
+function PriceInput({
+  value,
+  onChange,
+  className,
+  style,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const [raw, setRaw] = useState(value.toFixed(2));
+  const [focused, setFocused] = useState(false);
+
+  useEffect(() => {
+    if (!focused) setRaw(value.toFixed(2));
+  }, [value, focused]);
+
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={raw}
+      onFocus={() => setFocused(true)}
+      onChange={e => {
+        const s = e.target.value;
+        if (/^(\d*\.?\d*)$/.test(s)) setRaw(s);
+      }}
+      onBlur={() => {
+        setFocused(false);
+        const parsed = parseFloat(raw);
+        const final = Number.isFinite(parsed) && parsed >= 0 ? parsed : value;
+        setRaw(final.toFixed(2));
+        if (final !== value) onChange(final);
+      }}
+      className={className}
+      style={style}
+    />
+  );
+}
+
 // ── Helpers (fuera del componente para evitar re-creaciones) ──────────────────
 
 function resolveZoneTier(
@@ -781,13 +824,12 @@ interface LineaCarrito {
 
 let carritoCounter = 0;
 const PRODUCTS_PER_PAGE = 8;
-const IVA_RATE = 0.16;
-
 // ── Componente principal ──────────────────────────────────────────────────────
 
 export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: CreateOrderModalProps) {
   const { settings } = useCompany();
   const primary = settings.primaryColor;
+  const IVA_RATE = (settings.defaultIvaPct ?? 16) / 100;
   const primaryBg = primary + '18';
   const primaryBgMid = primary + '30';
 
@@ -796,6 +838,7 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
   const [searchTerm, setSearchTerm] = useState('');
   const [carrito, setCarrito] = useState<LineaCarrito[]>([]);
   const [notas, setNotas] = useState('');
+  const [includesIva, setIncludesIva] = useState(true);
 
   // ── Cliente seleccionado
   const [selectedCliente, setSelectedCliente] = useState<ClientDetail | null>(null);
@@ -1095,8 +1138,10 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
 
   // ── Totales
   const subtotal = carrito.reduce((sum, linea) => sum + linea.subtotal, 0);
-  const iva = subtotal * IVA_RATE;
-  const total = subtotal + iva;
+  const discountTotal = carrito.reduce((sum, l) => sum + Math.max(0, l.precioLista * l.cantidad - l.precioUnitario * l.cantidad), 0);
+  const baseForTax = subtotal - discountTotal;
+  const iva = includesIva ? baseForTax * IVA_RATE : 0;
+  const total = baseForTax + iva;
 
   // ── Guardar pedido
   const handleGuardar = () => {
@@ -1113,6 +1158,8 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
           : linea.producto.name,
       })),
       currency: 'MXN',
+      includesIva,
+      taxRate: includesIva ? IVA_RATE : 0,
     };
     onSave(dto);
     handleClose();
@@ -1133,6 +1180,7 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
     setQtyByProduct({});
     setCategoryDiscounts([]);
     setBookFor(null);
+    setIncludesIva(true);
     onClose();
   };
 
@@ -1775,13 +1823,9 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
                                 <label className="text-[10px] text-gray-500 block">P. Unit.</label>
                                 <div className={`relative flex items-center border rounded-md bg-white h-8 ${isOverride ? 'border-amber-400 bg-amber-50/40' : 'border-gray-200'}`}>
                                   <span className="pl-2 text-xs text-gray-400">$</span>
-                                  <input
-                                    type="number" min="0" step="0.01"
-                                    value={linea.precioUnitario.toFixed(2)}
-                                    onChange={e => {
-                                      const v = Number(e.target.value);
-                                      if (!Number.isNaN(v)) actualizarPrecio(linea.id, v);
-                                    }}
+                                  <PriceInput
+                                    value={linea.precioUnitario}
+                                    onChange={v => actualizarPrecio(linea.id, v)}
                                     className="flex-1 px-1.5 font-mono text-xs text-right bg-transparent focus:outline-none"
                                   />
                                   {/* Botón "Usar sugerido" cuando hay override */}
@@ -1876,14 +1920,29 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
                     </div>
                   ) : null;
                 })()}
-                <div className="flex justify-between text-sm pt-1 border-t border-gray-200">
-                  <span className="text-gray-500 flex items-center gap-1.5">
+                <div className="flex justify-between items-center text-sm pt-1 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setIncludesIva(v => !v)}
+                    className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700 transition-colors"
+                    title="Activar / desactivar IVA en este pedido"
+                  >
+                    <span
+                      className={`relative inline-flex h-4 w-7 flex-shrink-0 rounded-full border transition-colors ${includesIva ? 'border-transparent' : 'border-gray-300 bg-gray-200'}`}
+                      style={includesIva ? { backgroundColor: primary } : undefined}
+                    >
+                      <span
+                        className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform mt-0.5 ${includesIva ? 'translate-x-3.5' : 'translate-x-0.5'}`}
+                      />
+                    </span>
                     IVA
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-500">
                       {(IVA_RATE * 100).toFixed(0)}%
                     </span>
+                  </button>
+                  <span className={`font-semibold font-mono ${includesIva ? 'text-gray-900' : 'text-gray-400 line-through'}`}>
+                    {formatCurrency(includesIva ? iva : baseForTax * IVA_RATE)}
                   </span>
-                  <span className="font-semibold text-gray-900 font-mono">{formatCurrency(iva)}</span>
                 </div>
               </div>
 
@@ -1893,7 +1952,7 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
                   <span className="text-2xl font-bold font-mono" style={{ color: primary }}>{formatCurrency(total)}</span>
                 </div>
                 <p className="text-[10px] text-gray-400 mt-1 font-mono">
-                  {formatCurrency(subtotal)} + IVA {formatCurrency(iva)}
+                  {formatCurrency(baseForTax)}{includesIva ? ` + IVA ${formatCurrency(iva)}` : ' (sin IVA)'}
                 </p>
               </div>
             </div>

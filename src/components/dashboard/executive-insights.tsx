@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Badge, Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
 import { DashboardComprasSummary, DashboardSummary } from '@/services/dashboard';
 import { cn, formatCurrency, formatDateTime } from '@/lib/utils';
-import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpRight, Boxes, ClipboardList, FileWarning, Users } from 'lucide-react';
+import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpRight, Boxes, ClipboardList, FileWarning, TrendingUp, Users } from 'lucide-react';
 
 interface ExecutiveInsightsProps {
   dashboardData: DashboardSummary | null;
@@ -112,10 +112,13 @@ export function ExecutiveInsights({ dashboardData, comprasData, dashboardLoading
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 6);
 
+  const inventoryValue = dashboardData?.inventoryValue;
+  const inventoryValueAtCost = dashboardData?.inventoryValueAtCost;
+
   return (
     <section className="space-y-6">
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-12">
-        <Card className="xl:col-span-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-5">
+        <Card>
           <CardContent className="space-y-2">
             <div className="inline-flex rounded-xl bg-rose-100 p-2 text-rose-700">
               <FileWarning className="h-4 w-4" />
@@ -126,7 +129,7 @@ export function ExecutiveInsights({ dashboardData, comprasData, dashboardLoading
           </CardContent>
         </Card>
 
-        <Card className="xl:col-span-3">
+        <Card>
           <CardContent className="space-y-2">
             <div className="inline-flex rounded-xl bg-amber-100 p-2 text-amber-700">
               <Boxes className="h-4 w-4" />
@@ -137,7 +140,7 @@ export function ExecutiveInsights({ dashboardData, comprasData, dashboardLoading
           </CardContent>
         </Card>
 
-        <Card className="xl:col-span-3">
+        <Card>
           <CardContent className="space-y-2">
             <div className="inline-flex rounded-xl bg-sky-100 p-2 text-sky-700">
               <ClipboardList className="h-4 w-4" />
@@ -148,7 +151,7 @@ export function ExecutiveInsights({ dashboardData, comprasData, dashboardLoading
           </CardContent>
         </Card>
 
-        <Card className="xl:col-span-3">
+        <Card>
           <CardContent className="space-y-2">
             <div className="inline-flex rounded-xl bg-emerald-100 p-2 text-emerald-700">
               <Users className="h-4 w-4" />
@@ -160,6 +163,23 @@ export function ExecutiveInsights({ dashboardData, comprasData, dashboardLoading
               {clientDelta != null && clientDelta < 0 && <ArrowDown className="h-3 w-3 text-rose-600" />}
               {clientDelta != null ? `${clientDelta >= 0 ? '+' : ''}${clientDelta}% vs mes anterior` : 'Sin comparativo disponible'}
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="space-y-2">
+            <div className="inline-flex rounded-xl bg-violet-100 p-2 text-violet-700">
+              <TrendingUp className="h-4 w-4" />
+            </div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-500">Valor en inventario</p>
+            <p className="text-3xl font-semibold tracking-tight text-gray-900">
+              {dashboardLoading ? '...' : inventoryValue != null ? formatCurrency(inventoryValue) : '—'}
+            </p>
+            {inventoryValueAtCost != null ? (
+              <p className="text-xs text-gray-500">Costo: {formatCurrency(inventoryValueAtCost)}</p>
+            ) : (
+              <p className="text-xs text-gray-500">A precio de venta</p>
+            )}
           </CardContent>
         </Card>
       </div>

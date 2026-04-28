@@ -108,6 +108,8 @@ export interface CreateOrderDto {
     description?: string;
   }[];
   currency?: string;
+  includesIva?: boolean;
+  taxRate?: number;
 }
 
 // ── Códigos de estado de pedidos (según DB) ────────────────────────
