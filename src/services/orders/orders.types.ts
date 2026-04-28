@@ -80,10 +80,15 @@ export interface Order {
   id: number;
   code: string;
   client: OrderClient;
+  subtotal: string;
+  discountTotal: string;
+  taxRate: string;
+  taxAmount: string;
   total: string;
   currency: string;
   createdAt: string;
   items: OrderItem[];
+  cfdiInvoices?: unknown[];
 }
 
 export interface OrderStatus {

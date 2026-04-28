@@ -277,7 +277,8 @@ export function OrderDetailModal({ pedido, isOpen, onClose, onEdit, onEmitirCFDI
       y += 5;
 
       if (pedido.impuestos > 0) {
-        pdf.text('Impuestos', margin, y);
+        const ivaLabel = pedido.taxRate ? `IVA ${(pedido.taxRate * 100).toFixed(0)}%` : 'IVA';
+        pdf.text(ivaLabel, margin, y);
         pdf.text(formatCurrency(pedido.impuestos), pw - margin, y, { align: 'right' });
         y += 5;
       }
@@ -569,10 +570,20 @@ export function OrderDetailModal({ pedido, isOpen, onClose, onEdit, onEmitirCFDI
                     <span className="text-base font-bold text-gray-900">{formatCurrency(pedido.total)}</span>
                   </div>
                   {pedido.subtotal !== pedido.total && (
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-xs text-gray-400">Subtotal</span>
-                      <span className="text-xs text-gray-500">{formatCurrency(pedido.subtotal)}</span>
-                    </div>
+                    <>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-xs text-gray-400">Subtotal</span>
+                        <span className="text-xs text-gray-500">{formatCurrency(pedido.subtotal)}</span>
+                      </div>
+                      {pedido.impuestos > 0 && (
+                        <div className="flex items-center justify-between mt-0.5">
+                          <span className="text-xs text-gray-400">
+                            {pedido.taxRate ? `IVA ${(pedido.taxRate * 100).toFixed(0)}%` : 'IVA'}
+                          </span>
+                          <span className="text-xs text-gray-500">{formatCurrency(pedido.impuestos)}</span>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -729,7 +740,9 @@ export function OrderDetailModal({ pedido, isOpen, onClose, onEdit, onEmitirCFDI
                         )}
                         {pedido.impuestos > 0 && (
                           <tr className="bg-gray-50/50">
-                            <td colSpan={4} className="px-4 py-2.5 text-right text-xs text-gray-500">Impuestos</td>
+                            <td colSpan={4} className="px-4 py-2.5 text-right text-xs text-gray-500">
+                              {pedido.taxRate ? `IVA ${(pedido.taxRate * 100).toFixed(0)}%` : 'IVA'}
+                            </td>
                             <td className="px-4 py-2.5 text-right text-sm text-gray-700">{formatCurrency(pedido.impuestos)}</td>
                           </tr>
                         )}

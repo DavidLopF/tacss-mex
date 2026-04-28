@@ -74,10 +74,12 @@ export interface Pedido {
   estado: EstadoPedido;
   lineas: PedidoLinea[];
   subtotal: number;
+  discountTotal?: number;
+  taxRate?: number;
   impuestos: number;
   total: number;
   notas?: string;
-  transmitido?: boolean; // Flag para saber si ya fue transmitido
+  transmitido?: boolean;
   usuarioId: string;
   createdAt: Date;
   updatedAt: Date;
