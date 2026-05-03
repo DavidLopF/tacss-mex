@@ -1081,6 +1081,9 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido, copyFrom
           isActive: true,
           createdAt: '',
           totalOrders: 0,
+          totalSpent: 0,
+          priceZoneId: null,
+          priceZone: null,
         }));
         setAdditionalClients(additional);
 
@@ -1094,6 +1097,9 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido, copyFrom
           isActive: true,
           createdAt: '',
           totalOrders: 0,
+          totalSpent: 0,
+          priceZoneId: null,
+          priceZone: null,
         };
         const entries = shares.map((s, idx) => ({
           client: idx === 0 ? primaryClientDetail : additional[idx - 1],
