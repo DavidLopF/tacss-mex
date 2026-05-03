@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Loader2, Package, AlertCircle, CheckCircle2, Warehouse } from 'lucide-react';
-import { Modal, Button } from '@/components/ui';
+import { Modal, Button, NumericInput } from '@/components/ui';
 import { createReception, getWarehouses } from '@/services/receptions';
 import type { CreateReceptionDto, CreateReceptionResponse, WarehouseListItem } from '@/services/receptions';
 import type { PurchaseOrder, PurchaseOrderItem } from '@/services/suppliers';
@@ -295,12 +295,12 @@ export function CreateReceptionModal({ isOpen, onClose, order, onCreated }: Crea
               </select>
             ) : (
               /* Fallback: input numérico cuando el endpoint de warehouses no está disponible */
-              <input
-                type="number"
+              <NumericInput
+                integer
                 min={1}
                 placeholder="ID del almacén (ej: 1)"
-                value={warehouseId || ''}
-                onChange={(e) => setWarehouseId(e.target.value ? Number(e.target.value) : '')}
+                value={typeof warehouseId === 'number' ? warehouseId : 0}
+                onChange={(v) => setWarehouseId(v > 0 ? v : '')}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             )}
@@ -370,12 +370,12 @@ export function CreateReceptionModal({ isOpen, onClose, order, onCreated }: Crea
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <label className="text-[10px] text-gray-500">Recibir:</label>
-                      <input
-                        type="number"
+                      <NumericInput
+                        integer
                         min={0}
                         max={line.qtyPending}
-                        value={line.qtyToReceive || ''}
-                        onChange={(e) => updateQty(idx, parseInt(e.target.value) || 0)}
+                        value={line.qtyToReceive}
+                        onChange={(v) => updateQty(idx, v)}
                         disabled={!line.selected}
                         className="w-16 border border-gray-200 rounded px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                       />

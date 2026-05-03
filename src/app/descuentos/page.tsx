@@ -48,9 +48,17 @@ const S = {
 
 function Field(props: React.InputHTMLAttributes<HTMLInputElement>) {
   const [focus, setFocus] = useState(false);
+  // Numeric fields: use text+inputMode to eliminate browser spinner arrows
+  const isNumeric = props.type === 'number';
+  const effectiveType = isNumeric ? 'text' : props.type;
+  const effectiveInputMode = isNumeric
+    ? (props.step !== undefined && Number(props.step) % 1 !== 0 ? 'decimal' : 'numeric')
+    : props.inputMode;
   return (
     <input
       {...props}
+      type={effectiveType}
+      inputMode={effectiveInputMode}
       style={{
         ...S.field,
         ...(focus ? { borderColor: 'var(--primary-color, #2563eb)', boxShadow: '0 0 0 3px rgba(37,99,235,0.12)' } : {}),

@@ -3,6 +3,7 @@
 import { Pedido } from '@/types';
 import { useCfdiStore } from '@/stores';
 import { formatCurrency } from '@/lib/utils';
+import { getOrderClientCountLabel } from '@/lib/order-clients';
 import { StatusPill } from './status-pill';
 import { CfdiPill } from './cfdi-pill';
 import { OrderDetailPanel } from './order-detail-panel';
@@ -15,6 +16,7 @@ interface InboxViewProps {
   onNextStep: (pedido: Pedido) => void;
   onEdit?: (pedido: Pedido) => void;
   onEmitirCFDI?: (pedido: Pedido) => void;
+  onCopy?: (pedido: Pedido) => void;
 }
 
 const daysSince = (date: Date) => Math.floor((Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24));
@@ -63,12 +65,15 @@ function InboxRow({
             <span style={{ fontSize: 11, color: '#a19ea8', flexShrink: 0 }}>{relTime(pedido.createdAt)}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            <div style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {pedido.clienteNombre}
+            <div style={{ fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {pedido.numero}
             </div>
             <div style={{ fontSize: 13.5, fontVariantNumeric: 'tabular-nums', fontWeight: 500, flexShrink: 0 }}>
               {formatCurrency(pedido.total)}
             </div>
+          </div>
+          <div style={{ marginTop: 4, fontSize: 12.5, color: '#6c6a74', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', display: 'block' }}>
+            {getOrderClientCountLabel(pedido)}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -92,7 +97,7 @@ function InboxRow({
   );
 }
 
-export function InboxView({ pedidos, activeId, onSelect, onNextStep, onEdit, onEmitirCFDI }: InboxViewProps) {
+export function InboxView({ pedidos, activeId, onSelect, onNextStep, onEdit, onEmitirCFDI, onCopy }: InboxViewProps) {
   const activePedido = pedidos.find(p => p.id === activeId) ?? pedidos[0] ?? null;
 
   return (
@@ -134,6 +139,7 @@ export function InboxView({ pedidos, activeId, onSelect, onNextStep, onEdit, onE
             onNextStep={onNextStep}
             onEdit={onEdit}
             onEmitirCFDI={onEmitirCFDI}
+            onCopy={onCopy}
           />
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#a19ea8', fontSize: 13 }}>

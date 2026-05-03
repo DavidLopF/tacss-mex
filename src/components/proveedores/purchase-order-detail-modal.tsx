@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Calendar, Truck, Package, ArrowRight, Loader2, Percent, Save, ClipboardCheck, Eye, ChevronDown, ChevronUp } from 'lucide-react';
-import { Modal, Button } from '@/components/ui';
+import { Modal, Button, NumericInput } from '@/components/ui';
 import {
   PurchaseOrder,
   PurchaseOrderStatus,
@@ -272,14 +272,12 @@ export function PurchaseOrderDetailModal({ isOpen, onClose, order, onStatusChang
                   <span className="text-sm w-5 flex-shrink-0">{field.icon}</span>
                   <span className="text-xs text-gray-600 w-20 flex-shrink-0">{field.label}</span>
                   <div className="relative flex-shrink-0 w-24">
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.1"
-                      value={field.value || ''}
+                    <NumericInput
+                      min={0}
+                      max={100}
+                      value={field.value}
                       placeholder="0"
-                      onChange={(e) => field.setter(parseFloat(e.target.value) || 0)}
+                      onChange={(v) => field.setter(v)}
                       className="w-full pl-2 pr-6 py-1 border border-gray-200 rounded text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                     />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">%</span>

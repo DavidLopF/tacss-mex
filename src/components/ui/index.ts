@@ -5,3 +5,4 @@ export { Modal } from './modal';
 export { Select } from './select';
 export { Toast, ToastContainer } from './toast';
 export type { ToastType } from './toast';
+export { NumericInput } from './numeric-input';

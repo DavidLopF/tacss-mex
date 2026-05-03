@@ -3,7 +3,7 @@
 // PaymentForm — Registro de pagos PPD + generación automática de REP (CFDI 4.0)
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState } from 'react';
-import { Button } from '@/components/ui';
+import { Button, NumericInput } from '@/components/ui';
 import { RegisterPaymentDto } from '@/services/invoices/invoices.types';
 
 const FORMAS_PAGO = [
@@ -117,14 +117,12 @@ export const PaymentForm: React.FC<Props> = ({
           <label className="mb-1 block text-sm font-medium text-gray-700">
             Monto del Pago *
           </label>
-          <input
-            type="number"
-            step="0.01"
-            min="0.01"
+          <NumericInput
+            min={0.01}
             max={balanceDue}
             className={inputCls(errors.amount)}
             value={form.amount}
-            onChange={(e) => set('amount', parseFloat(e.target.value))}
+            onChange={(v) => set('amount', v)}
           />
           {errors.amount && <p className="mt-1 text-xs text-red-600">{errors.amount}</p>}
         </div>
@@ -147,13 +145,12 @@ export const PaymentForm: React.FC<Props> = ({
 
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">No. Parcialidad</label>
-          <input
-            type="number"
-            min="1"
-            step="1"
+          <NumericInput
+            integer
+            min={1}
             className={inputCls()}
             value={form.parciality ?? 1}
-            onChange={(e) => set('parciality', parseInt(e.target.value))}
+            onChange={(v) => set('parciality', v)}
           />
           <p className="mt-1 text-xs text-gray-400">Consecutivo del pago (1, 2, 3…)</p>
         </div>
@@ -175,13 +172,11 @@ export const PaymentForm: React.FC<Props> = ({
             <label className="mb-1 block text-sm font-medium text-gray-700">
               Tipo de Cambio
             </label>
-            <input
-              type="number"
-              step="0.01"
-              min="0.01"
+            <NumericInput
+              min={0.01}
               className={inputCls()}
               value={form.exchangeRate ?? 1}
-              onChange={(e) => set('exchangeRate', parseFloat(e.target.value))}
+              onChange={(v) => set('exchangeRate', v)}
             />
           </div>
         )}

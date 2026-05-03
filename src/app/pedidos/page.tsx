@@ -22,6 +22,7 @@ import { PermissionGuard } from '@/components/layout';
 import { useOrdersStore, useCfdiStore } from '@/stores';
 import { broadcastInvalidation } from '@/lib/cross-tab-sync';
 import { formatCurrency } from '@/lib/utils';
+import { getOrderClientSearchText } from '@/lib/order-clients';
 
 // ── Mappers ────────────────────────────────────────────────────────────────
 const mapEstadoBackendToFrontend = (statusCode: string): EstadoPedido => {
@@ -64,7 +65,7 @@ const mapOrdersToPedidos = (orderStatuses: OrderStatus[]): Pedido[] => {
         lineas: order.items.map(item => ({
           id: String(item.id),
           productoId: String(item.variantId),
-          variacionId: item.variant.sku ?? String(item.variantId),
+          variacionId: String(item.variantId),   // siempre el ID numérico — el SKU va en variacionNombre
           productoNombre: item.description,
           variacionNombre: item.variant.variantName,
           cantidad: item.qty,
@@ -81,6 +82,11 @@ const mapOrdersToPedidos = (orderStatuses: OrderStatus[]): Pedido[] => {
         usuarioId: '1',
         createdAt: new Date(order.createdAt),
         updatedAt: new Date(order.createdAt),
+        clientShares: order.clientShares?.map(s => ({
+          clientId: s.clientId,
+          clientName: s.clientName,
+          percentage: s.percentage,
+        })),
       });
     });
   });
@@ -213,6 +219,8 @@ export default function PedidosPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Pedido | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [copyingOrder, setCopyingOrder] = useState<Pedido | null>(null);
+  const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
 
   const toast = useToast();
 
@@ -281,7 +289,7 @@ export default function PedidosPage() {
     }
     if (search.trim()) {
       const q = search.toLowerCase();
-      list = list.filter(p => p.numero.toLowerCase().includes(q) || p.clienteNombre.toLowerCase().includes(q));
+      list = list.filter(p => p.numero.toLowerCase().includes(q) || getOrderClientSearchText(p).includes(q));
     }
     return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [pedidos, filter, search, cfdiStatuses]);
@@ -358,6 +366,11 @@ export default function PedidosPage() {
     setEditingOrder(pedido);
     setIsEditModalOpen(true);
   };
+
+  const handleCopy = useCallback((pedido: Pedido) => {
+    setCopyingOrder(pedido);
+    setIsCopyModalOpen(true);
+  }, []);
 
   return (
     <PermissionGuard moduleCode="PEDIDOS">
@@ -468,6 +481,7 @@ export default function PedidosPage() {
             onNextStep={handleNextStep}
             onEdit={handleEdit}
             onEmitirCFDI={handleEmitirCFDI}
+            onCopy={handleCopy}
           />
         )}
         {!loading && view === 'tabla' && (
@@ -499,6 +513,13 @@ export default function PedidosPage() {
           onClose={() => { setIsEditModalOpen(false); setEditingOrder(null); }}
           onSave={handleEditOrder}
           editPedido={editingOrder ?? undefined}
+        />
+        {/* Copiar pedido: pre-rellena datos pero siempre crea uno nuevo */}
+        <CreateOrderModal
+          isOpen={isCopyModalOpen}
+          onClose={() => { setIsCopyModalOpen(false); setCopyingOrder(null); }}
+          onSave={handleCreateOrder}
+          copyFromPedido={copyingOrder ?? undefined}
         />
       </div>
 

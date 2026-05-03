@@ -76,6 +76,13 @@ export interface OrderClient {
   updatedAt: string;
 }
 
+/** Share de cliente en un pedido (viene en el response del backend) */
+export interface OrderClientShareResponse {
+  clientId: number;
+  clientName: string;
+  percentage: number;
+}
+
 export interface Order {
   id: number;
   code: string;
@@ -89,6 +96,7 @@ export interface Order {
   createdAt: string;
   items: OrderItem[];
   cfdiInvoices?: unknown[];
+  clientShares?: OrderClientShareResponse[];
 }
 
 export interface OrderStatus {
@@ -103,6 +111,12 @@ export interface GetOrdersResponse {
   data: OrderStatus[];
 }
 
+/** Participación porcentual de un cliente en un pedido multicliente */
+export interface ClientShareDto {
+  clientId: number;
+  percentage: number; // 0–100, la suma de todos los shares debe ser 100
+}
+
 export interface CreateOrderDto {
   clientId: number;
   items: {
@@ -115,6 +129,12 @@ export interface CreateOrderDto {
   currency?: string;
   includesIva?: boolean;
   taxRate?: number;
+  /**
+   * Distribución porcentual entre clientes.
+   * Solo se envía cuando hay más de un cliente en el pedido.
+   * Debe incluir al cliente primario (clientId) con su porcentaje.
+   */
+  clientShares?: ClientShareDto[];
 }
 
 // ── Códigos de estado de pedidos (según DB) ────────────────────────

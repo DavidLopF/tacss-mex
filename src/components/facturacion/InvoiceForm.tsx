@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Badge, Button } from '@/components/ui';
+import { Badge, Button, NumericInput } from '@/components/ui';
 import { CreateInvoiceDto, InvoiceItemInput, TaxConfig, MetodoPago } from '@/services/invoices/invoices.types';
 
 const USO_CFDI = [
@@ -193,13 +193,11 @@ export const InvoiceForm: React.FC<Props> = ({
           {form.currency !== 'MXN' && (
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">Tipo de Cambio</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0.01"
+              <NumericInput
+                min={0.01}
                 className={inputBase}
                 value={form.exchangeRate ?? 1}
-                onChange={(e) => setForm((f) => ({ ...f, exchangeRate: parseFloat(e.target.value) }))}
+                onChange={(v) => setForm((f) => ({ ...f, exchangeRate: v }))}
               />
             </div>
           )}
@@ -263,39 +261,34 @@ export const InvoiceForm: React.FC<Props> = ({
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Cantidad *</label>
-                <input
-                  type="number"
-                  min="0.001"
-                  step="0.001"
+                <NumericInput
+                  min={0.001}
+                  decimals={3}
                   className={`${inputBase} ${errors[`item_${i}_qty`] ? 'border-red-300 focus:ring-red-500' : ''}`}
                   value={item.quantity}
-                  onChange={(e) => updateItem(i, 'quantity', parseFloat(e.target.value))}
+                  onChange={(v) => updateItem(i, 'quantity', v)}
                 />
                 {errors[`item_${i}_qty`] && <p className="mt-1 text-xs text-red-600">{errors[`item_${i}_qty`]}</p>}
               </div>
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Precio Unitario *</label>
-                <input
-                  type="number"
-                  min="0.01"
-                  step="0.01"
+                <NumericInput
+                  min={0.01}
                   className={`${inputBase} ${errors[`item_${i}_price`] ? 'border-red-300 focus:ring-red-500' : ''}`}
                   value={item.unitPrice}
-                  onChange={(e) => updateItem(i, 'unitPrice', parseFloat(e.target.value))}
+                  onChange={(v) => updateItem(i, 'unitPrice', v)}
                 />
                 {errors[`item_${i}_price`] && <p className="mt-1 text-xs text-red-600">{errors[`item_${i}_price`]}</p>}
               </div>
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Descuento</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
+                <NumericInput
+                  min={0}
                   className={inputBase}
                   value={item.discount ?? 0}
-                  onChange={(e) => updateItem(i, 'discount', parseFloat(e.target.value))}
+                  onChange={(v) => updateItem(i, 'discount', v)}
                 />
               </div>
 

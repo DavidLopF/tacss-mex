@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Edit2, Package, DollarSign, Tag, Calendar, Plus, Minus, User, TrendingUp, Truck, Star, ClipboardList, ArrowUpDown, MapPin, Search, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { Modal, Button, Badge, Card, CardContent, Select } from '@/components/ui';
+import { Modal, Button, Badge, Card, CardContent, Select, NumericInput } from '@/components/ui';
 import { Producto } from '@/types';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { useDebounce } from '@/lib/hooks';
@@ -498,12 +498,11 @@ export function ProductDetailModal({
                     <span className="text-sm font-medium text-gray-700">Precio de Venta</span>
                   </div>
                   {isEditing ? (
-                    <input
-                      type="number"
-                      value={editedProduct?.precio || 0}
-                      onChange={(e) => setEditedProduct(prev => prev ? { ...prev, precio: parseFloat(e.target.value) || 0 } : null)}
+                    <NumericInput
+                      min={0}
+                      value={editedProduct?.precio ?? 0}
+                      onChange={(v) => setEditedProduct(prev => prev ? { ...prev, precio: v } : null)}
                       className="text-2xl font-bold text-green-600 w-full border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      step="0.01"
                     />
                   ) : (
                     <p className="text-2xl font-bold text-green-600">{formatCurrency(currentProduct.precio)}</p>
@@ -798,12 +797,12 @@ export function ProductDetailModal({
                               <button onClick={() => handleVariationStockChange(variacion.id, variacion.stock - 1)} className="p-1 hover:bg-gray-100 rounded">
                                 <Minus className="w-3 h-3 text-gray-600" />
                               </button>
-                              <input
-                                type="number"
+                              <NumericInput
+                                integer
+                                min={0}
                                 value={variacion.stock}
-                                onChange={(e) => handleVariationStockChange(variacion.id, parseInt(e.target.value) || 0)}
+                                onChange={(v) => handleVariationStockChange(variacion.id, v)}
                                 className="w-14 text-center border border-gray-200 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                min="0"
                               />
                               <button onClick={() => handleVariationStockChange(variacion.id, variacion.stock + 1)} className="p-1 hover:bg-gray-100 rounded">
                                 <Plus className="w-3 h-3 text-gray-600" />

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
-import { Modal, Button } from '@/components/ui';
+import { Modal, Button, NumericInput } from '@/components/ui';
 import {
   CreatePurchaseOrderDto,
   SupplierListItem,
@@ -171,32 +171,31 @@ export function CreatePurchaseOrderModal({ isOpen, onClose, onSave, submitting }
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                   <div className="sm:col-span-2">
                     <label className="block text-xs text-gray-500 mb-1">ID Variante</label>
-                    <input
-                      type="number"
-                      value={item.variantId}
-                      onChange={(e) => updateItem(item.key, 'variantId', e.target.value ? Number(e.target.value) : '')}
+                    <NumericInput
+                      integer
+                      min={0}
+                      value={typeof item.variantId === 'number' ? item.variantId : 0}
+                      onChange={(v) => updateItem(item.key, 'variantId', v > 0 ? v : '')}
                       placeholder="ID de variante"
                       className="w-full px-2 py-1.5 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">Cantidad</label>
-                    <input
-                      type="number"
+                    <NumericInput
+                      integer
                       min={1}
                       value={item.qty}
-                      onChange={(e) => updateItem(item.key, 'qty', Number(e.target.value))}
+                      onChange={(v) => updateItem(item.key, 'qty', v)}
                       className="w-full px-2 py-1.5 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">Costo Unit.</label>
-                    <input
-                      type="number"
+                    <NumericInput
                       min={0}
-                      step={0.01}
                       value={item.unitCost}
-                      onChange={(e) => updateItem(item.key, 'unitCost', Number(e.target.value))}
+                      onChange={(v) => updateItem(item.key, 'unitCost', v)}
                       className="w-full px-2 py-1.5 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>

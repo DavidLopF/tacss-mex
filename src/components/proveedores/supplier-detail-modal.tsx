@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Truck, Calendar, DollarSign, Mail, Phone, MapPin, User, Package, Plus, Trash2, Search, Star, X, Loader2 } from 'lucide-react';
-import { Modal, Badge, Button, Card, CardContent, ToastContainer } from '@/components/ui';
+import { Modal, Badge, Button, Card, CardContent, ToastContainer, NumericInput } from '@/components/ui';
 import {
   SupplierDetail,
   SupplierProductItem,
@@ -449,14 +449,12 @@ export function SupplierDetailModal({ isOpen, onClose, supplier }: SupplierDetai
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="text-xs text-gray-600 mb-1 block">Costo del Proveedor *</label>
-                          <input
-                            type="number"
-                            value={addForm.supplierCost || ''}
-                            onChange={(e) => setAddForm(f => ({ ...f, supplierCost: parseFloat(e.target.value) || 0 }))}
+                          <NumericInput
+                            min={0}
+                            value={addForm.supplierCost ?? 0}
+                            onChange={(v) => setAddForm(f => ({ ...f, supplierCost: v }))}
                             className="w-full px-3 py-1.5 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                             placeholder="0.00"
-                            step="0.01"
-                            min="0"
                           />
                         </div>
                         <div>
@@ -483,24 +481,24 @@ export function SupplierDetailModal({ isOpen, onClose, supplier }: SupplierDetai
                         </div>
                         <div>
                           <label className="text-xs text-gray-600 mb-1 block">Lead Time (días)</label>
-                          <input
-                            type="number"
-                            value={addForm.leadTimeDays ?? ''}
-                            onChange={(e) => setAddForm(f => ({ ...f, leadTimeDays: e.target.value ? parseInt(e.target.value) : undefined }))}
+                          <NumericInput
+                            integer
+                            min={0}
+                            value={addForm.leadTimeDays ?? 0}
+                            onChange={(v) => setAddForm(f => ({ ...f, leadTimeDays: v > 0 ? v : undefined }))}
                             className="w-full px-3 py-1.5 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                             placeholder="—"
-                            min="0"
                           />
                         </div>
                         <div>
                           <label className="text-xs text-gray-600 mb-1 block">Pedido Mínimo</label>
-                          <input
-                            type="number"
-                            value={addForm.minOrderQty ?? ''}
-                            onChange={(e) => setAddForm(f => ({ ...f, minOrderQty: e.target.value ? parseInt(e.target.value) : undefined }))}
+                          <NumericInput
+                            integer
+                            min={1}
+                            value={addForm.minOrderQty ?? 0}
+                            onChange={(v) => setAddForm(f => ({ ...f, minOrderQty: v > 0 ? v : undefined }))}
                             className="w-full px-3 py-1.5 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                             placeholder="—"
-                            min="1"
                           />
                         </div>
                         <div className="flex items-end pb-1">

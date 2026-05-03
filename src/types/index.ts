@@ -64,6 +64,12 @@ export interface PedidoLinea {
   subtotal: number;
 }
 
+export interface PedidoClientShare {
+  clientId: number;
+  clientName: string;
+  percentage: number;
+}
+
 export interface Pedido {
   id: string;
   numero: string;
@@ -83,6 +89,8 @@ export interface Pedido {
   usuarioId: string;
   createdAt: Date;
   updatedAt: Date;
+  /** Distribución porcentual entre clientes (solo en pedidos multi-cliente) */
+  clientShares?: PedidoClientShare[];
 }
 
 export interface Cliente {

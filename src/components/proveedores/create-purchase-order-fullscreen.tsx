@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, Button } from '@/components/ui';
+import { Card, Button, NumericInput } from '@/components/ui';
 import {
   Search,
   Plus,
@@ -686,11 +686,11 @@ export function CreatePurchaseOrderFullscreen({
                           <div className="grid grid-cols-4 gap-2 mt-2">
                             <div>
                               <label className="text-[10px] text-gray-500 block">Cantidad</label>
-                              <input
-                                type="number"
-                                min="1"
+                              <NumericInput
+                                integer
+                                min={1}
                                 value={linea.cantidad}
-                                onChange={(e) => actualizarCantidad(linea.key, parseInt(e.target.value) || 1)}
+                                onChange={(v) => actualizarCantidad(linea.key, v)}
                                 className="w-full px-2 py-1 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 transition-all"
                                 style={{ '--tw-ring-color': primary } as React.CSSProperties}
                               />
@@ -699,12 +699,10 @@ export function CreatePurchaseOrderFullscreen({
                               <label className="text-[10px] text-gray-500 block">Costo Unit.</label>
                               <div className="relative">
                                 <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
+                                <NumericInput
+                                  min={0}
                                   value={linea.costoUnitario}
-                                  onChange={(e) => actualizarCosto(linea.key, parseFloat(e.target.value) || 0)}
+                                  onChange={(v) => actualizarCosto(linea.key, v)}
                                   className="w-full pl-4 pr-1 py-1 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 transition-all"
                                   style={{ '--tw-ring-color': primary } as React.CSSProperties}
                                 />
@@ -782,14 +780,12 @@ export function CreatePurchaseOrderFullscreen({
                       <span className="text-sm w-5 flex-shrink-0">{field.icon}</span>
                       <span className="text-xs text-gray-600 w-20 flex-shrink-0">{field.label}</span>
                       <div className="relative flex-shrink-0 w-24">
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.1"
-                          value={field.value || ''}
+                        <NumericInput
+                          min={0}
+                          max={100}
+                          value={field.value}
                           placeholder="0"
-                          onChange={(e) => field.setter(parseFloat(e.target.value) || 0)}
+                          onChange={(v) => field.setter(v)}
                           className="w-full pl-2 pr-6 py-1 border border-gray-200 rounded text-sm text-right focus:outline-none focus:ring-2 transition-all"
                           style={{ '--tw-ring-color': primary } as React.CSSProperties}
                         />

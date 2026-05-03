@@ -4,15 +4,17 @@ import { useState } from 'react';
 import { Pedido } from '@/types';
 import { useCfdiStore } from '@/stores';
 import { formatCurrency } from '@/lib/utils';
+import { getOrderClientLabel } from '@/lib/order-clients';
 import { StatusPill } from './status-pill';
 import { CfdiPill } from './cfdi-pill';
-import { Printer, Copy, Mail, ArrowRight, Download, Calendar } from 'lucide-react';
+import { Printer, Copy, Mail, ArrowRight, Download, Calendar, ClipboardCopy } from 'lucide-react';
 
 interface OrderDetailPanelProps {
   pedido: Pedido;
   onNextStep: (pedido: Pedido) => void;
   onEdit?: (pedido: Pedido) => void;
   onEmitirCFDI?: (pedido: Pedido) => void;
+  onCopy?: (pedido: Pedido) => void;
 }
 
 const daysSince = (date: Date) => {
@@ -193,30 +195,78 @@ function HistorialTab({ pedido }: { pedido: Pedido }) {
 }
 
 function ClienteTab({ pedido }: { pedido: Pedido }) {
+  const isMultiClient = pedido.clientShares && pedido.clientShares.length > 1;
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, maxWidth: 700 }}>
       <div style={{ background: 'white', border: '1px solid #e6e3db', borderRadius: 12, padding: 20 }}>
-        <div style={{ fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6c6a74', marginBottom: 12 }}>Cliente</div>
-        <div style={{ fontSize: 22, fontWeight: 600, lineHeight: 1.2, marginBottom: 4 }}>{pedido.clienteNombre}</div>
-        <div style={{ height: 1, background: '#e6e3db', margin: '16px 0' }} />
-        <dl style={{ fontSize: 12.5, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {pedido.clienteEmail && (
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <dt style={{ color: '#6c6a74' }}>Email</dt>
-              <dd style={{ margin: 0 }}>{pedido.clienteEmail}</dd>
-            </div>
-          )}
-          {pedido.clienteTelefono && (
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <dt style={{ color: '#6c6a74' }}>Teléfono</dt>
-              <dd style={{ margin: 0, fontVariantNumeric: 'tabular-nums' }}>{pedido.clienteTelefono}</dd>
-            </div>
-          )}
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <dt style={{ color: '#6c6a74' }}>ID cliente</dt>
-            <dd style={{ margin: 0, fontFamily: 'var(--font-mono, monospace)', fontSize: 11.5 }}>#{pedido.clienteId}</dd>
+        <div style={{ fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6c6a74', marginBottom: 12 }}>
+          {isMultiClient ? 'Clientes (multi-cliente)' : 'Cliente'}
+        </div>
+
+        {/* Pedido multi-cliente: lista de participantes con porcentaje */}
+        {isMultiClient ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {pedido.clientShares!.map((share, idx) => (
+              <div
+                key={share.clientId}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '10px 12px', borderRadius: 8,
+                  background: idx === 0 ? '#fbfaf5' : 'transparent',
+                  border: '1px solid #e6e3db',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: '50%',
+                    background: idx === 0 ? 'var(--primary-color, #3a3840)' : '#9ca3af',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 11, fontWeight: 700, color: 'white', flexShrink: 0,
+                  }}>
+                    {share.clientName.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.2 }}>{share.clientName}</div>
+                    {idx === 0 && (
+                      <div style={{ fontSize: 10, color: '#6c6a74', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Primario</div>
+                    )}
+                  </div>
+                </div>
+                <div style={{
+                  fontSize: 15, fontWeight: 700, fontVariantNumeric: 'tabular-nums',
+                  color: 'var(--foreground)',
+                }}>
+                  {share.percentage.toFixed(0)}%
+                </div>
+              </div>
+            ))}
           </div>
-        </dl>
+        ) : (
+          /* Pedido de un solo cliente */
+          <>
+            <div style={{ fontSize: 22, fontWeight: 600, lineHeight: 1.2, marginBottom: 4 }}>{pedido.clienteNombre}</div>
+            <div style={{ height: 1, background: '#e6e3db', margin: '16px 0' }} />
+            <dl style={{ fontSize: 12.5, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {pedido.clienteEmail && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <dt style={{ color: '#6c6a74' }}>Email</dt>
+                  <dd style={{ margin: 0 }}>{pedido.clienteEmail}</dd>
+                </div>
+              )}
+              {pedido.clienteTelefono && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <dt style={{ color: '#6c6a74' }}>Teléfono</dt>
+                  <dd style={{ margin: 0, fontVariantNumeric: 'tabular-nums' }}>{pedido.clienteTelefono}</dd>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <dt style={{ color: '#6c6a74' }}>ID cliente</dt>
+                <dd style={{ margin: 0, fontFamily: 'var(--font-mono, monospace)', fontSize: 11.5 }}>#{pedido.clienteId}</dd>
+              </div>
+            </dl>
+          </>
+        )}
       </div>
       <div style={{ background: 'white', border: '1px solid #e6e3db', borderRadius: 12, padding: 20 }}>
         <div style={{ fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6c6a74', marginBottom: 12 }}>Este pedido</div>
@@ -287,7 +337,7 @@ function DocsTab({ pedido }: { pedido: Pedido }) {
   );
 }
 
-export function OrderDetailPanel({ pedido, onNextStep, onEdit, onEmitirCFDI }: OrderDetailPanelProps) {
+export function OrderDetailPanel({ pedido, onNextStep, onEdit, onEmitirCFDI, onCopy }: OrderDetailPanelProps) {
   const [tab, setTab] = useState<'lineas' | 'historial' | 'cliente' | 'docs'>('lineas');
   const cfdiStatus = useCfdiStore((s) => s.cfdiStatuses[pedido.id]);
   const invoiceStatus = cfdiStatus?.invoiceStatus ?? 'no_facturado';
@@ -326,8 +376,11 @@ export function OrderDetailPanel({ pedido, onNextStep, onEdit, onEmitirCFDI }: O
               </span>
             </div>
             <h2 style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.05, letterSpacing: '-0.02em', margin: 0 }}>
-              {pedido.clienteNombre}
+              {pedido.numero}
             </h2>
+            <div style={{ marginTop: 6, fontSize: 14, fontWeight: 500, color: '#3a3840' }}>
+              {getOrderClientLabel(pedido)}
+            </div>
             <div style={{ marginTop: 8, fontSize: 12.5, color: '#6c6a74', display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 <Calendar size={12} />
@@ -355,6 +408,7 @@ export function OrderDetailPanel({ pedido, onNextStep, onEdit, onEmitirCFDI }: O
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <TbBtn><Printer size={13} /> Imprimir</TbBtn>
             <TbBtn onClick={() => onEdit?.(pedido)}><Copy size={13} /> Editar</TbBtn>
+            <TbBtn onClick={() => onCopy?.(pedido)}><ClipboardCopy size={13} /> Copiar pedido</TbBtn>
             <TbBtn><Mail size={13} /> Enviar al cliente</TbBtn>
             {nextLabel && (
               <button

@@ -4,6 +4,7 @@ import { Pedido, EstadoPedido } from '@/types';
 import { OrderStatusCode } from '@/services/orders';
 import { useCfdiStore } from '@/stores';
 import { formatCurrency } from '@/lib/utils';
+import { getOrderClientCountLabel } from '@/lib/order-clients';
 import { CfdiPill } from './cfdi-pill';
 import { STATUS_CONFIG } from './status-pill';
 import { Package } from 'lucide-react';
@@ -52,8 +53,11 @@ function KanbanCard({ pedido, onClick }: { pedido: Pedido; onClick: () => void }
         </span>
         <span style={{ fontSize: 10.5, color: '#a19ea8' }}>{relTime(pedido.createdAt)}</span>
       </div>
-      <div style={{ fontSize: 13, fontWeight: 500, lineHeight: 1.3, marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {pedido.clienteNombre}
+      <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {pedido.numero}
+      </div>
+      <div style={{ fontSize: 11.5, color: '#6c6a74', marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {getOrderClientCountLabel(pedido)}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11.5 }}>
         <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 500 }}>{formatCurrency(pedido.total)}</span>

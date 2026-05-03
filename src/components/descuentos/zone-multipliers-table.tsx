@@ -15,6 +15,7 @@
 
 import { useState, useEffect } from 'react';
 import { Edit2, Save, X, RefreshCw, MapPin } from 'lucide-react';
+import { NumericInput } from '@/components/ui';
 import { getPriceZones, updatePriceZone } from '@/services/discounts';
 import type { PriceZone } from '@/services/discounts/discounts.types';
 
@@ -233,12 +234,11 @@ export function ZoneMultipliersTable({ onSuccess, onError }: ZoneMultipliersTabl
                 {/* Mayoreo */}
                 <td className="px-4 py-3">
                   {row._editing ? (
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={row._draft.wholesaleMultiplier}
-                      onChange={(e) => updateDraft(row.id, 'wholesaleMultiplier', e.target.value)}
+                    <NumericInput
+                      min={0}
+                      decimals={4}
+                      value={parseFloat(row._draft.wholesaleMultiplier) || 0}
+                      onChange={(v) => updateDraft(row.id, 'wholesaleMultiplier', String(v))}
                       className="w-28 text-sm border border-indigo-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                     />
                   ) : (
@@ -254,12 +254,11 @@ export function ZoneMultipliersTable({ onSuccess, onError }: ZoneMultipliersTabl
                 {/* Super-mayoreo */}
                 <td className="px-4 py-3">
                   {row._editing ? (
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={row._draft.superWholesaleMultiplier}
-                      onChange={(e) => updateDraft(row.id, 'superWholesaleMultiplier', e.target.value)}
+                    <NumericInput
+                      min={0}
+                      decimals={4}
+                      value={parseFloat(row._draft.superWholesaleMultiplier) || 0}
+                      onChange={(v) => updateDraft(row.id, 'superWholesaleMultiplier', String(v))}
                       className="w-28 text-sm border border-indigo-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                     />
                   ) : (

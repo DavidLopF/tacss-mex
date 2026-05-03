@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, Button } from '@/components/ui';
+import { Card, Button, NumericInput } from '@/components/ui';
 import {
   Search, Plus, Minus, Trash2, ShoppingCart, DollarSign, History,
   Package, FileText, Download, ChevronLeft, ChevronRight, Warehouse,
@@ -10,7 +10,7 @@ import {
 import { formatCurrency } from '@/lib/utils';
 import { useDebounce } from '@/lib/hooks';
 import { useCompany } from '@/lib/company-context';
-import { getOrderProducts, OrderProductItem, CreateOrderDto } from '@/services/orders';
+import { getOrderProducts, OrderProductItem, CreateOrderDto, ClientShareDto } from '@/services/orders';
 import { getClients, getClientPriceHistory, ClientDetail, PriceHistoryItem } from '@/services/clients';
 import { getProductPriceTiers, getPriceZones, ProductPriceTier, PriceZone } from '@/services/price-zones';
 import { getCategoryDiscounts, CategoryDiscount } from '@/services/discounts';
@@ -277,6 +277,159 @@ function ClientPickerModal({ isOpen, onClose, onSelect, primary }: ClientPickerM
             </div>
           </div>
         )}
+      </div>
+    </>
+  );
+}
+
+// ── Client Shares Modal ───────────────────────────────────────────────────────
+
+interface ClientShareEntry {
+  client: ClientDetail;
+  percentage: number;
+}
+
+interface ClientSharesModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (shares: ClientShareEntry[]) => void;
+  shares: ClientShareEntry[];
+  primary: string;
+}
+
+function ClientSharesModal({ isOpen, onClose, onConfirm, shares: initialShares, primary }: ClientSharesModalProps) {
+  const [shares, setShares] = useState<ClientShareEntry[]>([]);
+
+  useEffect(() => {
+    if (isOpen) setShares(initialShares.map(s => ({ ...s })));
+  }, [isOpen, initialShares]);
+
+  if (!isOpen) return null;
+
+  const total = shares.reduce((sum, s) => sum + s.percentage, 0);
+  const isValid = Math.abs(total - 100) <= 0.02;
+
+  const updatePercentage = (idx: number, val: number) => {
+    setShares(prev => prev.map((s, i) => i === idx ? { ...s, percentage: val } : s));
+  };
+
+  const distributeEqually = () => {
+    const eq = parseFloat((100 / shares.length).toFixed(2));
+    const remainder = parseFloat((100 - eq * (shares.length - 1)).toFixed(2));
+    setShares(prev => prev.map((s, i) => ({ ...s, percentage: i === prev.length - 1 ? remainder : eq })));
+  };
+
+  const diff = parseFloat((100 - total).toFixed(2));
+
+  return (
+    <>
+      <div className="fixed inset-0 z-[75] bg-black/40" onClick={onClose} />
+      <div className="fixed z-[80] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] max-h-[80vh] flex flex-col bg-white rounded-2xl shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full text-white text-xs font-bold" style={{ background: primary }}>
+              %
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900">Distribución del pedido</h3>
+              <p className="text-[11px] text-gray-400">Define qué porcentaje corresponde a cada cliente</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+            <X className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
+
+        {/* Atajo: distribuir igual */}
+        <div className="px-5 py-2.5 border-b border-gray-100 flex items-center justify-between">
+          <span className="text-xs text-gray-500">Ajusta los porcentajes manualmente o distribuye en partes iguales</span>
+          <button
+            onClick={distributeEqually}
+            className="text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors"
+            style={{ background: `${primary}18`, color: primary }}
+          >
+            <RotateCcw className="w-3 h-3 inline mr-1" />
+            Partes iguales
+          </button>
+        </div>
+
+        {/* Lista de clientes con inputs */}
+        <div className="flex-1 overflow-y-auto px-5 py-3 space-y-2">
+          {shares.map((entry, idx) => (
+            <div key={entry.client.id} className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 bg-gray-50">
+              <div
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                style={{ backgroundColor: primary }}
+              >
+                {entry.client.name.charAt(0)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900 truncate">{entry.client.name}</p>
+                {idx === 0 && (
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: `${primary}18`, color: primary }}>
+                    Cliente primario · precio base
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <NumericInput
+                  min={0}
+                  max={100}
+                  value={entry.percentage}
+                  onChange={(val) => updatePercentage(idx, val)}
+                  className="w-20 text-right text-sm font-mono border border-gray-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 bg-white"
+                  style={{ '--tw-ring-color': primary } as React.CSSProperties}
+                />
+                <span className="text-sm font-semibold text-gray-400">%</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer con total y validación */}
+        <div className="px-5 py-4 border-t border-gray-100">
+          {/* Barra de progreso */}
+          <div className="mb-3">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] text-gray-500">Total asignado</span>
+              <span className={`text-sm font-bold font-mono ${isValid ? 'text-emerald-600' : 'text-red-500'}`}>
+                {total.toFixed(2)}%
+              </span>
+            </div>
+            <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full transition-all duration-200 rounded-full"
+                style={{
+                  width: `${Math.min(100, total)}%`,
+                  background: isValid ? '#10b981' : total > 100 ? '#ef4444' : primary,
+                }}
+              />
+            </div>
+            {!isValid && (
+              <p className="text-[11px] mt-1.5 flex items-center gap-1" style={{ color: diff > 0 ? '#f59e0b' : '#ef4444' }}>
+                <AlertTriangle className="w-3 h-3" />
+                {diff > 0 ? `Faltan ${diff.toFixed(2)}% por asignar` : `Excede en ${Math.abs(diff).toFixed(2)}%`}
+              </p>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="flex-1 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => { if (isValid) onConfirm(shares); }}
+              disabled={!isValid}
+              className="flex-1 py-2 rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ background: primary }}
+            >
+              Confirmar distribución
+            </button>
+          </div>
+        </div>
       </div>
     </>
   );
@@ -807,6 +960,8 @@ interface CreateOrderModalProps {
   onClose: () => void;
   onSave: (dto: CreateOrderDto) => void;
   editPedido?: Pedido;
+  /** Pedido a usar como plantilla para copiar (siempre crea uno nuevo) */
+  copyFromPedido?: Pedido;
 }
 
 interface LineaCarrito {
@@ -826,7 +981,7 @@ let carritoCounter = 0;
 const PRODUCTS_PER_PAGE = 8;
 // ── Componente principal ──────────────────────────────────────────────────────
 
-export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: CreateOrderModalProps) {
+export function CreateOrderModal({ isOpen, onClose, onSave, editPedido, copyFromPedido }: CreateOrderModalProps) {
   const { settings } = useCompany();
   const primary = settings.primaryColor;
   const IVA_RATE = (settings.defaultIvaPct ?? 16) / 100;
@@ -843,6 +998,13 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
   // ── Cliente seleccionado
   const [selectedCliente, setSelectedCliente] = useState<ClientDetail | null>(null);
   const [isClientPickerOpen, setIsClientPickerOpen] = useState(false);
+
+  // ── Multi-cliente: clientes adicionales y distribución porcentual
+  const [additionalClients, setAdditionalClients] = useState<ClientDetail[]>([]);
+  const [clientSharesEntries, setClientSharesEntries] = useState<ClientShareEntry[]>([]);
+  const [isSharesModalOpen, setIsSharesModalOpen] = useState(false);
+  // true cuando el picker se abre para añadir un cliente adicional (no el primario)
+  const [isPickingAdditional, setIsPickingAdditional] = useState(false);
 
   // ── Productos (paginados)
   const [productos, setProductos] = useState<OrderProductItem[]>([]);
@@ -900,16 +1062,58 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
     };
   }, [isOpen, onClose]);
 
-  // ── Pre-rellenar al editar
+  // ── Pre-rellenar al editar o copiar
   useEffect(() => {
-    if (isOpen && editPedido) {
-      setClienteId(parseInt(editPedido.clienteId));
-      setNotas(editPedido.notas || '');
-      const items: LineaCarrito[] = editPedido.lineas.map((linea) => {
+    const source = editPedido ?? copyFromPedido;
+    if (isOpen && source) {
+      setClienteId(parseInt(source.clienteId));
+      setNotas(editPedido ? (source.notas || '') : ''); // Al copiar no trasladamos notas
+
+      // ── Restaurar clientes adicionales y shares si es pedido multi-cliente
+      const shares = source.clientShares ?? [];
+      if (shares.length > 1) {
+        // El primero es el cliente primario (clienteId ya seteado arriba)
+        // Los demás son clientes adicionales — construimos stubs de ClientDetail
+        const additional: ClientDetail[] = shares.slice(1).map(s => ({
+          id: s.clientId,
+          name: s.clientName,
+          document: null,
+          isActive: true,
+          createdAt: '',
+          totalOrders: 0,
+        }));
+        setAdditionalClients(additional);
+
+        // Restaurar los porcentajes tal como venían del pedido original
+        // Para construir ClientShareEntry necesitamos el cliente primario también
+        const primaryShare = shares[0];
+        const primaryClientDetail: ClientDetail = {
+          id: parseInt(source.clienteId),
+          name: source.clienteNombre,
+          document: null,
+          isActive: true,
+          createdAt: '',
+          totalOrders: 0,
+        };
+        const entries = shares.map((s, idx) => ({
+          client: idx === 0 ? primaryClientDetail : additional[idx - 1],
+          percentage: s.percentage,
+        }));
+        setClientSharesEntries(entries);
+      } else {
+        setAdditionalClients([]);
+        setClientSharesEntries([]);
+      }
+
+      const items: LineaCarrito[] = source.lineas.map((linea) => {
         carritoCounter++;
+        const variantIdNum = parseInt(linea.variacionId, 10);
+        if (!Number.isFinite(variantIdNum)) {
+          console.error('[CreateOrderModal] variacionId inválido en línea:', linea);
+        }
         const producto: OrderProductItem = {
-          id: parseInt(linea.variacionId),
-          productId: parseInt(linea.productoId),
+          id: variantIdNum,
+          productId: parseInt(linea.productoId, 10),
           name: linea.productoNombre,
           description: linea.productoNombre,
           variantName: linea.variacionNombre,
@@ -928,7 +1132,7 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
       });
       setCarrito(items);
     }
-  }, [isOpen, editPedido]);
+  }, [isOpen, editPedido, copyFromPedido]);
 
   // ── Cargar datos al abrir modal
   useEffect(() => {
@@ -1146,6 +1350,16 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
   // ── Guardar pedido
   const handleGuardar = () => {
     if (!clienteId || carrito.length === 0) return;
+
+    // Construir clientShares si hay más de un cliente
+    let clientShares: ClientShareDto[] | undefined;
+    if (additionalClients.length > 0 && clientSharesEntries.length > 0) {
+      clientShares = clientSharesEntries.map(e => ({
+        clientId: e.client.id,
+        percentage: e.percentage,
+      }));
+    }
+
     const dto: CreateOrderDto = {
       clientId: clienteId as number,
       items: carrito.map(linea => ({
@@ -1160,6 +1374,7 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
       currency: 'MXN',
       includesIva,
       taxRate: includesIva ? IVA_RATE : 0,
+      ...(clientShares ? { clientShares } : {}),
     };
     onSave(dto);
     handleClose();
@@ -1181,6 +1396,11 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
     setCategoryDiscounts([]);
     setBookFor(null);
     setIncludesIva(true);
+    // Reset multi-cliente
+    setAdditionalClients([]);
+    setClientSharesEntries([]);
+    setIsSharesModalOpen(false);
+    setIsPickingAdditional(false);
     onClose();
   };
 
@@ -1203,22 +1423,77 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
   };
 
   const handleSelectCliente = (client: ClientDetail) => {
-    setSelectedCliente(client);
-    setClienteId(client.id);
-    setCarrito([]);
-    setExpandedHistorial(null);
-    setHistorialPrecios([]);
-    setExpandedZoneTable(null);
+    if (isPickingAdditional) {
+      // Evitar duplicados
+      const alreadyAdded =
+        (selectedCliente?.id === client.id) ||
+        additionalClients.some(c => c.id === client.id);
+      if (!alreadyAdded) {
+        const newAdditional = [...additionalClients, client];
+        setAdditionalClients(newAdditional);
+        // Distribuir partes iguales por defecto entre todos los clientes
+        const allClients = selectedCliente ? [selectedCliente, ...newAdditional] : newAdditional;
+        const eq = parseFloat((100 / allClients.length).toFixed(2));
+        const remainder = parseFloat((100 - eq * (allClients.length - 1)).toFixed(2));
+        setClientSharesEntries(allClients.map((c, i) => ({
+          client: c,
+          percentage: i === allClients.length - 1 ? remainder : eq,
+        })));
+      }
+      setIsPickingAdditional(false);
+    } else {
+      setSelectedCliente(client);
+      setClienteId(client.id);
+      setCarrito([]);
+      setExpandedHistorial(null);
+      setHistorialPrecios([]);
+      setExpandedZoneTable(null);
+      // Limpiar multi-cliente si se cambia el primario
+      setAdditionalClients([]);
+      setClientSharesEntries([]);
+    }
+  };
+
+  const handleRemoveAdditionalClient = (clientId: number) => {
+    const newAdditional = additionalClients.filter(c => c.id !== clientId);
+    setAdditionalClients(newAdditional);
+    if (newAdditional.length === 0) {
+      setClientSharesEntries([]);
+    } else if (selectedCliente) {
+      const allClients = [selectedCliente, ...newAdditional];
+      const eq = parseFloat((100 / allClients.length).toFixed(2));
+      const remainder = parseFloat((100 - eq * (allClients.length - 1)).toFixed(2));
+      setClientSharesEntries(allClients.map((c, i) => ({
+        client: c,
+        percentage: i === allClients.length - 1 ? remainder : eq,
+      })));
+    }
   };
 
   if (!isOpen) return null;
+
+  // Calcula si hay shares configuradas con porcentajes no default (para el badge)
+  const hasConfiguredShares = clientSharesEntries.length > 0;
 
   return (
     <>
       <ClientPickerModal
         isOpen={isClientPickerOpen}
-        onClose={() => setIsClientPickerOpen(false)}
+        onClose={() => { setIsClientPickerOpen(false); setIsPickingAdditional(false); }}
         onSelect={handleSelectCliente}
+        primary={primary}
+      />
+      <ClientSharesModal
+        isOpen={isSharesModalOpen}
+        onClose={() => setIsSharesModalOpen(false)}
+        onConfirm={(shares) => { setClientSharesEntries(shares); setIsSharesModalOpen(false); }}
+        shares={
+          clientSharesEntries.length > 0
+            ? clientSharesEntries
+            : selectedCliente
+              ? [{ client: selectedCliente, percentage: 100 }, ...additionalClients.map(c => ({ client: c, percentage: 0 }))]
+              : []
+        }
         primary={primary}
       />
 
@@ -1253,7 +1528,11 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
         {/* ── Header ── */}
         <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 bg-white flex-shrink-0">
           <h2 className="text-lg font-semibold text-gray-900">
-            {editPedido ? `Editar Pedido ${editPedido.numero}` : 'Crear Nuevo Pedido'}
+            {editPedido
+              ? `Editar Pedido ${editPedido.numero}`
+              : copyFromPedido
+                ? `Copiar Pedido ${copyFromPedido.numero}`
+                : 'Crear Nuevo Pedido'}
           </h2>
           <button onClick={handleClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <X className="w-5 h-5 text-gray-500" />
@@ -1292,28 +1571,83 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
               </div>
 
               {selectedCliente ? (
-                <div className="rounded-xl border border-gray-200 p-3 bg-white animate-in fade-in duration-200">
-                  <div className="flex items-center gap-2.5">
-                    <div
-                      className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-                      style={{ backgroundColor: primary }}
-                    >
-                      {selectedCliente.name.charAt(0)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{selectedCliente.name}</p>
-                      {selectedCliente.phone && (
-                        <p className="text-xs text-gray-400">{selectedCliente.phone}</p>
+                <div className="space-y-2 animate-in fade-in duration-200">
+                  {/* Cliente primario */}
+                  <div className="rounded-xl border border-gray-200 p-3 bg-white">
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                        style={{ backgroundColor: primary }}
+                      >
+                        {selectedCliente.name.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">{selectedCliente.name}</p>
+                        {selectedCliente.phone && (
+                          <p className="text-xs text-gray-400">{selectedCliente.phone}</p>
+                        )}
+                      </div>
+                      {additionalClients.length > 0 && (
+                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: `${primary}18`, color: primary }}>
+                          Primario
+                        </span>
                       )}
                     </div>
+                    {selectedCliente.priceZone && (
+                      <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-semibold"
+                        style={{ background: `${primary}18`, color: primary }}>
+                        <MapPin className="w-3 h-3" />
+                        {selectedCliente.priceZone.label}
+                      </div>
+                    )}
                   </div>
-                  {selectedCliente.priceZone && (
-                    <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-semibold"
-                      style={{ background: `${primary}18`, color: primary }}>
-                      <MapPin className="w-3 h-3" />
-                      {selectedCliente.priceZone.label}
+
+                  {/* Clientes adicionales */}
+                  {additionalClients.map(c => (
+                    <div key={c.id} className="rounded-xl border border-gray-200 p-2.5 bg-gray-50 flex items-center gap-2.5">
+                      <div
+                        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                        style={{ backgroundColor: '#6b7280' }}
+                      >
+                        {c.name.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-700 truncate">{c.name}</p>
+                      </div>
+                      {hasConfiguredShares && (
+                        <span className="text-[10px] font-mono text-gray-500 flex-shrink-0">
+                          {clientSharesEntries.find(e => e.client.id === c.id)?.percentage.toFixed(0)}%
+                        </span>
+                      )}
+                      <button
+                        onClick={() => handleRemoveAdditionalClient(c.id)}
+                        className="p-1 rounded-md hover:bg-red-50 hover:text-red-500 text-gray-400 transition-colors flex-shrink-0"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
                     </div>
-                  )}
+                  ))}
+
+                  {/* Botones: añadir cliente + distribución */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { setIsPickingAdditional(true); setIsClientPickerOpen(true); }}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 border border-dashed border-gray-300 rounded-lg text-xs text-gray-500 hover:border-gray-400 hover:bg-gray-50 transition-all"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Añadir cliente
+                    </button>
+                    {additionalClients.length > 0 && (
+                      <button
+                        onClick={() => setIsSharesModalOpen(true)}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                        style={{ background: hasConfiguredShares ? `${primary}18` : '#fef3c7', color: hasConfiguredShares ? primary : '#92400e' }}
+                      >
+                        <Tag className="w-3 h-3" />
+                        {hasConfiguredShares ? 'Distribución configurada' : 'Configurar %'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <button
@@ -1523,10 +1857,11 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
                               >
                                 <Minus className="w-3 h-3" />
                               </button>
-                              <input
-                                type="number"
+                              <NumericInput
+                                integer
+                                min={1}
                                 value={qty}
-                                onChange={e => setQtyByProduct(prev => ({ ...prev, [producto.id]: Math.max(1, Number(e.target.value) || 1) }))}
+                                onChange={(v) => setQtyByProduct(prev => ({ ...prev, [producto.id]: Math.max(1, v) }))}
                                 className="w-10 text-center font-mono text-xs py-1 bg-transparent focus:outline-none"
                               />
                               <button
@@ -1799,12 +2134,11 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido }: Create
                                   >
                                     <Minus className="h-3.5 w-3.5" />
                                   </button>
-                                  <input
-                                    type="number" min="1" value={linea.cantidad}
-                                    onChange={e => {
-                                      const v = Number(e.target.value);
-                                      if (!Number.isNaN(v)) actualizarCantidad(linea.id, v);
-                                    }}
+                                  <NumericInput
+                                    integer
+                                    min={1}
+                                    value={linea.cantidad}
+                                    onChange={(v) => actualizarCantidad(linea.id, v)}
                                     className="w-full px-2 py-1 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 transition-all text-center"
                                     style={{ '--tw-ring-color': primary } as React.CSSProperties}
                                   />

@@ -19,6 +19,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Save, Trash2, RefreshCw, Tag, AlertCircle, CheckCircle,
 } from 'lucide-react';
+import { NumericInput } from '@/components/ui';
 import { getCategoryDiscounts, bulkUpsertCategoryDiscounts } from '@/services/discounts';
 import { getCategories } from '@/services/products';
 import type { CategoryDto } from '@/services/products/products.types';
@@ -279,11 +280,11 @@ export function CategoryDiscountsTable({ onSuccess, onError }: CategoryDiscounts
 
                 {/* Cantidad mínima */}
                 <td className="px-4 py-2.5">
-                  <input
-                    type="number"
-                    min="1"
+                  <NumericInput
+                    integer
+                    min={1}
                     value={row.minQty}
-                    onChange={(e) => updateRow(row._localId, { minQty: parseInt(e.target.value) || 1 })}
+                    onChange={(v) => updateRow(row._localId, { minQty: v })}
                     disabled={!!row._delete}
                     className="w-24 text-sm border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50 disabled:bg-gray-50"
                   />
@@ -292,13 +293,11 @@ export function CategoryDiscountsTable({ onSuccess, onError }: CategoryDiscounts
                 {/* Descuento % */}
                 <td className="px-4 py-2.5">
                   <div className="flex items-center gap-1">
-                    <input
-                      type="number"
-                      min="0.01"
-                      max="100"
-                      step="0.5"
+                    <NumericInput
+                      min={0.01}
+                      max={100}
                       value={row.discountPercent}
-                      onChange={(e) => updateRow(row._localId, { discountPercent: parseFloat(e.target.value) || 0 })}
+                      onChange={(v) => updateRow(row._localId, { discountPercent: v })}
                       disabled={!!row._delete}
                       className="w-20 text-sm border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50 disabled:bg-gray-50"
                     />
