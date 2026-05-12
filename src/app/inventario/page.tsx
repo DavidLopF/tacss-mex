@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { InventoryTable, InventoryTableSkeleton, InventoryStats } from '@/components/inventario';
+import { InventoryTable, InventoryTableSkeleton, InventoryStats, CategoryFilterModal } from '@/components/inventario';
 import { Producto } from '@/types';
 import { getProducts, PaginatedProductsDto, getStadistics } from '@/services/products';
 import { useDebounce, useToast, usePermissions, useCrossTabSync } from '@/lib/hooks';
@@ -14,7 +14,7 @@ import { broadcastInvalidation } from '@/lib/cross-tab-sync';
 export default function InventarioPage() {
   // ── Data & UI state (single shallow subscription) ──
   const {
-    products, page, limit, search, total, loading, statistics,
+    products, page, limit, search, total, loading, statistics, selectedCategories,
   } = useInventoryStore(useShallow((s) => ({
     products: s.products,
     page: s.page,
@@ -23,6 +23,7 @@ export default function InventarioPage() {
     total: s.total,
     loading: s.loading,
     statistics: s.statistics,
+    selectedCategories: s.selectedCategories,
   })));
 
   // ── Actions (stable references — no re-render on data change) ──
@@ -32,9 +33,12 @@ export default function InventarioPage() {
   const setPage = useInventoryStore((s) => s.setPage);
   const setLimit = useInventoryStore((s) => s.setLimit);
   const setSearch = useInventoryStore((s) => s.setSearch);
+  const setSelectedCategories = useInventoryStore((s) => s.setSelectedCategories);
   const patchProduct = useInventoryStore((s) => s.patchProduct);
   const removeProduct = useInventoryStore((s) => s.removeProduct);
   const upsertProduct = useInventoryStore((s) => s.upsertProduct);
+
+  const [isCategoryFilterOpen, setIsCategoryFilterOpen] = useState(false);
 
   // Toast notifications
   const toast = useToast();
@@ -42,10 +46,10 @@ export default function InventarioPage() {
 
   const debouncedSearch = useDebounce(search, 500);
 
-  const load = useCallback(async (p = page, q = search, l = limit) => {
+  const load = useCallback(async (p = page, q = search, l = limit, cats = selectedCategories) => {
     setLoading(true);
     try {
-      const filters = { page: p, limit: l, search: q };
+      const filters = { page: p, limit: l, search: q, categories: cats };
       const res: PaginatedProductsDto = await getProducts(filters);
       setProducts(res.items, res.total);
     } catch (err) {
@@ -74,13 +78,13 @@ export default function InventarioPage() {
   }, [loadStatistics]);
 
   useEffect(() => {
-    load(page, debouncedSearch, limit);
+    load(page, debouncedSearch, limit, selectedCategories);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, debouncedSearch, limit]);
+  }, [page, debouncedSearch, limit, selectedCategories]);
 
   // ── Cross-tab sync: recargar cuando otra pestaña muta inventario ──
   useCrossTabSync('inventory', () => {
-    load(page, debouncedSearch, limit);
+    load(page, debouncedSearch, limit, selectedCategories);
     loadStatistics();
   });
 
@@ -128,8 +132,8 @@ export default function InventarioPage() {
             {loading ? (
               <InventoryTableSkeleton rows={limit} />
             ) : (
-              <InventoryTable 
-                productos={products} 
+              <InventoryTable
+                productos={products}
                 onProductUpdate={canEdit ? handleProductUpdate : undefined}
                 onProductCreate={canCreate ? handleProductCreate : undefined}
                 onProductDelete={canDelete ? handleProductDelete : undefined}
@@ -142,12 +146,21 @@ export default function InventarioPage() {
                 externalItemsPerPage={limit}
                 onItemsPerPageChange={(newLimit) => { setLimit(newLimit); }}
                 totalItems={total}
+                onOpenCategoryFilter={() => setIsCategoryFilterOpen(true)}
+                selectedCategoriesCount={selectedCategories.length}
                 canCreate={canCreate}
                 canEdit={canEdit}
                 canDelete={canDelete}
               />
             )}
           </div>
+
+          <CategoryFilterModal
+            isOpen={isCategoryFilterOpen}
+            onClose={() => setIsCategoryFilterOpen(false)}
+            selectedIds={selectedCategories}
+            onApply={(ids) => setSelectedCategories(ids)}
+          />
         </div>
       </main>
     </PermissionGuard>

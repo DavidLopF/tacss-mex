@@ -1,4 +1,4 @@
-import { get, post, put, del } from '@/services/http-client';
+import { get, post, put } from '@/services/http-client';
 import {
   ProductFiltersDto,
   PaginatedProductsDto,
@@ -17,23 +17,30 @@ const BASE_PATH = '/api/products';
 
 /**
  * Obtener lista de productos con paginación y filtros.
- * GET /api/products
+ * POST /api/products
+ *
+ * Query params: page, limit, search, sku, isActive, minPrice, maxPrice, hasStock
+ * Body: { categories: number[] }
  *
  * El backend responde: { success, data: { data: ApiProduct[], pagination } }
- * Aquí mapeamos a PaginatedProductsDto con items: Producto[]
  */
 export async function getProducts(filters: ProductFiltersDto = {}): Promise<PaginatedProductsDto> {
-  const raw = await get<ApiProductsResponse>(BASE_PATH, {
-    page: filters.page,
-    limit: filters.limit,
-    search: filters.search,
-    categoryId: filters.categoryId,
-    sku: filters.sku,
-    isActive: filters.isActive,
-    minPrice: filters.minPrice,
-    maxPrice: filters.maxPrice,
-    hasStock: filters.hasStock,
-  });
+  const { categories, page, limit, search, sku, isActive, minPrice, maxPrice, hasStock } = filters;
+
+  const raw = await post<ApiProductsResponse>(
+    BASE_PATH,
+    { categories: categories ?? [] },
+    {
+      page,
+      limit,
+      search,
+      sku,
+      isActive,
+      minPrice,
+      maxPrice,
+      hasStock,
+    },
+  );
 
   return {
     items: raw.data.map(mapApiProductToProducto),

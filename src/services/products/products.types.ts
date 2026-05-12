@@ -1,11 +1,11 @@
 import { Producto } from '@/types';
 
-// ── Filtros para GET /api/products ──────────────────────────────────
+// ── Filtros para POST /api/products ─────────────────────────────────
 export interface ProductFiltersDto {
   page?: number;
   limit?: number;
   search?: string;
-  categoryId?: number;
+  categories?: number[];
   sku?: string;
   isActive?: boolean;
   minPrice?: number;

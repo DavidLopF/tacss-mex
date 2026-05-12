@@ -16,6 +16,7 @@ interface InventoryState {
   page: number;
   limit: number;
   search: string;
+  selectedCategories: number[];
 
   // ── Loading flags ──
   loading: boolean;
@@ -29,6 +30,7 @@ interface InventoryState {
   setPage: (p: number) => void;
   setLimit: (l: number) => void;
   setSearch: (s: string) => void;
+  setSelectedCategories: (ids: number[]) => void;
 
   // ── Granular mutations ──
   /** Inserta o reemplaza un producto en el array (por id) */
@@ -46,6 +48,7 @@ export const useInventoryStore = create<InventoryState>((set) => ({
   page: 1,
   limit: 10,
   search: '',
+  selectedCategories: [],
   loading: false,
   submitting: false,
 
@@ -57,6 +60,7 @@ export const useInventoryStore = create<InventoryState>((set) => ({
   setPage: (page) => set({ page }),
   setLimit: (limit) => set({ limit, page: 1 }),
   setSearch: (search) => set({ search, page: 1 }),
+  setSelectedCategories: (selectedCategories) => set({ selectedCategories, page: 1 }),
 
   upsertProduct: (product) =>
     set((s) => {

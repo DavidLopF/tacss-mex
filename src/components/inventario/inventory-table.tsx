@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import {
   Search, Plus, Edit, Eye, Trash2, Package,
-  ChevronLeft, ChevronRight, Upload, BarChart2, ChevronDown,
+  ChevronLeft, ChevronRight, Upload, BarChart2, ChevronDown, Tag,
 } from 'lucide-react';
 import { Card, Button, Badge } from '@/components/ui';
 import { ProductDetailModal } from './product-detail-modal';
@@ -33,6 +33,9 @@ interface InventoryTableProps {
   externalItemsPerPage?: number;
   onItemsPerPageChange?: (limit: number) => void;
   totalItems?: number;
+  // Category filter
+  onOpenCategoryFilter?: () => void;
+  selectedCategoriesCount?: number;
   // Permission flags
   canCreate?: boolean;
   canEdit?: boolean;
@@ -53,12 +56,13 @@ export function InventoryTable({
   externalItemsPerPage,
   onItemsPerPageChange,
   totalItems,
+  onOpenCategoryFilter,
+  selectedCategoriesCount = 0,
   canCreate = true,
   canEdit = true,
   canDelete = true,
 }: InventoryTableProps) {
   const [internalSearch, setInternalSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
   const [internalPage, setInternalPage] = useState(1);
   const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
   const [selectedProductRaw, setSelectedProductRaw] = useState<ApiProductDetail | null>(null);
@@ -84,13 +88,10 @@ export function InventoryTable({
 
   const effectiveItemsPerPage = externalItemsPerPage ?? itemsPerPage;
 
-  const categories = ['Todas', ...Array.from(new Set(productos.map(p => p.categoria)))];
-
   const filteredProducts = productos.filter(producto => {
     const matchesSearch = !searchTerm || producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          producto.sku.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === '' || selectedCategory === 'Todas' || producto.categoria === selectedCategory;
-    return matchesSearch && matchesCategory;
+    return matchesSearch;
   });
 
   const totalPages = Math.ceil((externalItemsPerPage ? (totalItems ?? filteredProducts.length) : filteredProducts.length) / effectiveItemsPerPage);
@@ -225,21 +226,24 @@ export function InventoryTable({
             />
           </div>
 
-          <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
-            {categories.slice(0, 6).map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category === 'Todas' ? '' : category)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
-                  (selectedCategory === '' && category === 'Todas') || selectedCategory === category
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
+          {onOpenCategoryFilter && (
+            <button
+              onClick={onOpenCategoryFilter}
+              className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm transition-colors ${
+                selectedCategoriesCount > 0
+                  ? 'border-blue-400 bg-blue-50 text-blue-700'
+                  : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <Tag className="w-4 h-4" />
+              Categorías
+              {selectedCategoriesCount > 0 && (
+                <span className="bg-blue-500 text-white text-xs rounded-full px-1.5 py-0.5 leading-none">
+                  {selectedCategoriesCount}
+                </span>
+              )}
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
