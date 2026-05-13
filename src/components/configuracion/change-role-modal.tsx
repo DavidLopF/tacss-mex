@@ -716,7 +716,6 @@ export function ChangeRoleModal({
   const createCodeId = useId();
   const permsRoleLabelId = useId();
   const permsRoleSelectId = useId();
-  const permsRoleSelectId = useId();
 
   // ── Assign tab state ──
   const [rolesState, setRolesState] = useState({
@@ -726,6 +725,122 @@ export function ChangeRoleModal({
     error: "",
   });
   const lastUserIdRef = useRef<number | null>(null);
+  const [createForm, setCreateForm] = useState({
+    name: "",
+    description: "",
+    code: "",
+    error: "",
+    creating: false,
+  });
+  const [permsState, setPermsState] = useState({
+    roleId: "" as number | "",
+    backendModules: [] as import("@/services/users").RolePermission[],
+    selectedPerms: new Set<string>(),
+    loading: false,
+    error: "",
+    saving: false,
+  });
+
+  const fetchPermissions = async (roleId: number) => {
+    setPermsState((prev) => ({
+      ...prev,
+      loading: true,
+      error: "",
+      backendModules: [],
+      selectedPerms: new Set(),
+    }));
+    try {
+      const data = await getRolePermissions(roleId);
+      const filteredData = data.filter((mod) => !HIDDEN_MODULES.has(mod.moduleCode));
+      const active: string[] = [];
+      for (const mod of filteredData) {
+        if (mod.canView) active.push(`${mod.moduleCode}.canView`);
+        if (mod.canCreate) active.push(`${mod.moduleCode}.canCreate`);
+        if (mod.canEdit) active.push(`${mod.moduleCode}.canEdit`);
+        if (mod.canDelete) active.push(`${mod.moduleCode}.canDelete`);
+      }
+      setPermsState((prev) => ({
+        ...prev,
+        backendModules: filteredData,
+        selectedPerms: new Set(active),
+      }));
+    } catch (err) {
+      console.error("Error cargando permisos:", err);
+      setPermsState((prev) => ({ ...prev, error: "No se pudieron cargar los permisos del rol" }));
+    } finally {
+      setPermsState((prev) => ({ ...prev, loading: false }));
+    }
+  };
+
+  useEffect(() => {
+    if (permsState.roleId !== "") {
+      fetchPermissions(permsState.roleId as number);
+    }
+  }, [permsState.roleId]);
+
+  const togglePerm = (permId: string) => {
+    setPermsState((prev) => {
+      const next = new Set(prev.selectedPerms);
+      if (next.has(permId)) next.delete(permId);
+      else next.add(permId);
+      return { ...prev, selectedPerms: next };
+    });
+  };
+
+  const toggleAllPerms = (mod: import("@/services/users").RolePermission, keys: string[]) => {
+    const allSelected = keys.every((k) => permsState.selectedPerms.has(k));
+    setPermsState((prev) => {
+      const next = new Set(prev.selectedPerms);
+      if (allSelected) {
+        keys.forEach((k) => next.delete(k));
+      } else {
+        keys.forEach((k) => next.add(k));
+      }
+      return { ...prev, selectedPerms: next };
+    });
+  };
+
+  const toggleModule = (moduleCode: string) => {
+    const actions = ["canView", "canCreate", "canEdit", "canDelete"];
+    const keys = actions.map((a) => `${moduleCode}.${a}`);
+    const allSelected = keys.every((k) => permsState.selectedPerms.has(k));
+    setPermsState((prev) => {
+      const next = new Set(prev.selectedPerms);
+      keys.forEach((k) => {
+        if (allSelected) next.delete(k);
+        else next.add(k);
+      });
+      return { ...prev, selectedPerms: next };
+    });
+  };
+
+  const handleSavePerms = async () => {
+    if (permsState.roleId === "") return;
+    setPermsState((prev) => ({ ...prev, saving: true, error: "" }));
+    try {
+      const permissions = permsState.backendModules.map((mod) => ({
+        moduleId: mod.moduleId,
+        canView: permsState.selectedPerms.has(`${mod.moduleCode}.canView`),
+        canCreate: permsState.selectedPerms.has(`${mod.moduleCode}.canCreate`),
+        canEdit: permsState.selectedPerms.has(`${mod.moduleCode}.canEdit`),
+        canDelete: permsState.selectedPerms.has(`${mod.moduleCode}.canDelete`),
+      }));
+      await updateRolePermissions(permsState.roleId as number, { permissions });
+      await fetchPermissions(permsState.roleId as number);
+      setPermsState((prev) => ({
+        ...prev,
+        saving: false,
+        error: "",
+      }));
+    } catch (err) {
+      console.error("Error guardando permisos:", err);
+      setPermsState((prev) => ({
+        ...prev,
+        saving: false,
+        error: err instanceof Error ? err.message : "Error al guardar permisos",
+      }));
+    }
+  };
 
   const handleOpen = () => {
     setTab("assign");
@@ -765,6 +880,39 @@ export function ChangeRoleModal({
     onClose();
   };
 
+  const handleCreateRole = async () => {
+    if (!createForm.name.trim() || !onRoleCreate) return;
+    setCreateForm((prev) => ({ ...prev, creating: true, error: "" }));
+    try {
+      const newRole = await onRoleCreate({
+        name: createForm.name.trim(),
+        description: createForm.description.trim(),
+        code: createForm.code.trim(),
+      });
+      if (newRole && "id" in newRole) {
+        setCreateForm({
+          name: "",
+          description: "",
+          code: "",
+          error: "",
+          creating: false,
+        });
+        setTab("assign");
+        setRolesState((prev) => ({
+          ...prev,
+          roleId: (newRole as Role).id,
+        }));
+        loadRoles();
+      }
+    } catch (err) {
+      setCreateForm((prev) => ({
+        ...prev,
+        error: err instanceof Error ? err.message : "Error al crear rol",
+        creating: false,
+      }));
+    }
+  };
+
   // ── Assign ──
   const handleAssign = () => {
     if (!user || rolesState.roleId === "" || rolesState.roleId === user.role?.id) return;
@@ -775,6 +923,7 @@ export function ChangeRoleModal({
   const selectedRole = rolesState.roles.find((r) => r.id === rolesState.roleId);
 
   const totalPerms = rolesState.roles.length * 4;
+  const permRole = rolesState.roles.find((r) => r.id === permsState.roleId);
 
   if (!user) return null;
 
