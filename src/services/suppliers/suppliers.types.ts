@@ -215,8 +215,10 @@ export function canTransitionPO(
  */
 export function getAvailablePOTransitions(currentStatus: PurchaseOrderStatus): PurchaseOrderStatus[] {
   return (Object.entries(PO_STATUS_TRANSITION_RULES) as [PurchaseOrderStatus, POStatusTransitionRule][])
-    .filter(([, rule]) => rule.allowedFrom.includes(currentStatus))
-    .map(([status]) => status);
+    .reduce<PurchaseOrderStatus[]>((acc, [status, rule]) => {
+      if (rule.allowedFrom.includes(currentStatus)) acc.push(status);
+      return acc;
+    }, []);
 }
 
 // ── Item de orden de compra ────────────────────────────────────────

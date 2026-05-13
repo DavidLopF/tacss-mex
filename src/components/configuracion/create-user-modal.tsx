@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useReducer } from 'react';
 import { Modal, Button } from '@/components/ui';
 import type { CreateUserDto, Role } from '@/services/users';
 import { getAllRoles } from '@/services/users';
@@ -12,21 +12,43 @@ interface CreateUserModalProps {
   submitting?: boolean;
 }
 
+type FormState = {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  roleId: number | '';
+};
+
+type FormAction =
+  | { type: 'setField'; field: keyof FormState; value: string | number | '' }
+  | { type: 'reset' };
+
+const initialFormState: FormState = {
+  name: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+  roleId: '',
+};
+
+function formReducer(state: FormState, action: FormAction): FormState {
+  switch (action.type) {
+    case 'setField':
+      return { ...state, [action.field]: action.value };
+    case 'reset':
+      return initialFormState;
+    default:
+      return state;
+  }
+}
+
 export function CreateUserModal({ isOpen, onClose, onSave, submitting }: CreateUserModalProps) {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [roleId, setRoleId] = useState<number | ''>('');
+  const [formState, dispatch] = useReducer(formReducer, initialFormState);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loadingRoles, setLoadingRoles] = useState(false);
   const [rolesError, setRolesError] = useState('');
 
-  useEffect(() => {
-    if (isOpen) {
-      loadRoles();
-    }
-  }, [isOpen]);
 
   const loadRoles = async () => {
     setLoadingRoles(true);
@@ -43,11 +65,7 @@ export function CreateUserModal({ isOpen, onClose, onSave, submitting }: CreateU
   };
 
   const handleReset = () => {
-    setName('');
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-    setRoleId('');
+    dispatch({ type: 'reset' });
   };
 
   const handleClose = () => {
@@ -57,70 +75,77 @@ export function CreateUserModal({ isOpen, onClose, onSave, submitting }: CreateU
 
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const passwordsMatch = password === confirmPassword;
-  const isFormValid = name.trim() && email.trim() && isValidEmail(email) && password.length >= 6 && passwordsMatch && roleId !== '';
+  const passwordsMatch = formState.password === formState.confirmPassword;
+  const isFormValid =
+    formState.name.trim() &&
+    formState.email.trim() &&
+    isValidEmail(formState.email) &&
+    formState.password.length >= 6 &&
+    passwordsMatch &&
+    formState.roleId !== '';
 
   const handleSubmit = () => {
     if (!isFormValid) return;
 
     onSave({
-      fullName: name.trim(),
-      email: email.trim(),
-      password,
-      confirmPassword,
-      roleId: roleId as number,
+      fullName: formState.name.trim(),
+      email: formState.email.trim(),
+      password: formState.password,
+      confirmPassword: formState.confirmPassword,
+      roleId: formState.roleId as number,
     });
 
     handleReset();
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Nuevo Usuario" size="md">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Nuevo Usuario" size="md" onOpen={loadRoles}>
       <div className="space-y-5">
         {/* Nombre */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="create-user-name" className="block text-sm font-medium text-zinc-700 mb-1">
             Nombre completo <span className="text-red-500">*</span>
           </label>
           <input
+            id="create-user-name"
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={formState.name}
+            onChange={(e) => dispatch({ type: 'setField', field: 'name', value: e.target.value })}
             placeholder="Ej: Juan Pérez"
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            autoFocus
+            className="w-full px-3 py-2 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         {/* Email */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="create-user-email" className="block text-sm font-medium text-zinc-700 mb-1">
             Correo electrónico <span className="text-red-500">*</span>
           </label>
           <input
+            id="create-user-email"
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={formState.email}
+            onChange={(e) => dispatch({ type: 'setField', field: 'email', value: e.target.value })}
             placeholder="Ej: juan@empresa.com"
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          {email && !isValidEmail(email) && (
+          {formState.email && !isValidEmail(formState.email) && (
             <p className="mt-1 text-xs text-red-500">Ingresa un correo electrónico válido</p>
           )}
         </div>
 
         {/* Rol */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="create-user-role" className="block text-sm font-medium text-zinc-700 mb-1">
             Rol <span className="text-red-500">*</span>
           </label>
           {loadingRoles ? (
-            <div className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm text-gray-400">
-              Cargando roles...
+            <div className="w-full px-3 py-2 border border-zinc-200 rounded-lg bg-zinc-50 text-sm text-zinc-400">
+              Cargando roles…
             </div>
           ) : rolesError ? (
             <div className="flex items-center gap-2">
-              <div className="flex-1 px-3 py-2 border border-red-200 rounded-lg bg-red-50 text-sm text-red-500">
+              <div className="flex-1 px-3 py-2 border border-red-200 rounded-lg bg-red-50 text-sm text-red-600">
                 {rolesError}
               </div>
               <button
@@ -133,11 +158,14 @@ export function CreateUserModal({ isOpen, onClose, onSave, submitting }: CreateU
             </div>
           ) : (
             <select
-              value={roleId}
-              onChange={(e) => setRoleId(e.target.value ? Number(e.target.value) : '')}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              id="create-user-role"
+              value={formState.roleId}
+              onChange={(e) =>
+                dispatch({ type: 'setField', field: 'roleId', value: e.target.value ? Number(e.target.value) : '' })
+              }
+              className="w-full px-3 py-2 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
-              <option value="">Seleccionar rol...</option>
+              <option value="">Seleccionar rol…</option>
               {roles.map((role) => (
                 <option key={role.id} value={role.id}>
                   {role.name}
@@ -149,34 +177,36 @@ export function CreateUserModal({ isOpen, onClose, onSave, submitting }: CreateU
 
         {/* Contraseña */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="create-user-password" className="block text-sm font-medium text-zinc-700 mb-1">
             Contraseña <span className="text-red-500">*</span>
           </label>
           <input
+            id="create-user-password"
             type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={formState.password}
+            onChange={(e) => dispatch({ type: 'setField', field: 'password', value: e.target.value })}
             placeholder="Mínimo 6 caracteres"
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          {password && password.length < 6 && (
+          {formState.password && formState.password.length < 6 && (
             <p className="mt-1 text-xs text-red-500">La contraseña debe tener al menos 6 caracteres</p>
           )}
         </div>
 
         {/* Confirmar contraseña */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="create-user-confirm-password" className="block text-sm font-medium text-zinc-700 mb-1">
             Confirmar contraseña <span className="text-red-500">*</span>
           </label>
           <input
+            id="create-user-confirm-password"
             type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            value={formState.confirmPassword}
+            onChange={(e) => dispatch({ type: 'setField', field: 'confirmPassword', value: e.target.value })}
             placeholder="Repetir contraseña"
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          {confirmPassword && !passwordsMatch && (
+          {formState.confirmPassword && !passwordsMatch && (
             <p className="mt-1 text-xs text-red-500">Las contraseñas no coinciden</p>
           )}
         </div>
@@ -187,7 +217,7 @@ export function CreateUserModal({ isOpen, onClose, onSave, submitting }: CreateU
             Cancelar
           </Button>
           <Button onClick={handleSubmit} className="flex-1" disabled={!isFormValid || submitting}>
-            {submitting ? 'Creando...' : 'Crear Usuario'}
+            {submitting ? 'Creando…' : 'Crear Usuario'}
           </Button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { Building2, ShoppingBag, DollarSign, Clock, FileText } from 'lucide-react';
+import Link from 'next/link';
 import { StatCard } from './stat-card';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
@@ -37,7 +38,7 @@ export function ComprasTab({ data, loading }: ComprasTabProps) {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-12">
         <StatCard
           title="Total Órdenes de Compra"
-          value={loading ? '...' : (poStats?.totalOrders ?? 0)}
+          value={loading ? '…' : (poStats?.totalOrders ?? 0)}
           icon={ShoppingBag}
           iconClassName="bg-blue-100 text-blue-600"
           sparklineData={poTrend}
@@ -45,7 +46,7 @@ export function ComprasTab({ data, loading }: ComprasTabProps) {
         />
         <StatCard
           title="OC en Proceso"
-          value={loading ? '...' : pendingOrders}
+          value={loading ? '…' : pendingOrders}
           icon={Clock}
           iconClassName="bg-amber-100 text-amber-600"
           sparklineData={[Math.max(pendingOrders - 3, 0), Math.max(pendingOrders - 1, 0), pendingOrders]}
@@ -53,7 +54,7 @@ export function ComprasTab({ data, loading }: ComprasTabProps) {
         />
         <StatCard
           title="Total Gastado"
-          value={loading ? '...' : formatCurrency(poStats?.totalSpent ?? 0)}
+          value={loading ? '…' : formatCurrency(poStats?.totalSpent ?? 0)}
           icon={DollarSign}
           iconClassName="bg-emerald-100 text-emerald-600"
           sparklineData={[
@@ -65,7 +66,7 @@ export function ComprasTab({ data, loading }: ComprasTabProps) {
         />
         <StatCard
           title="Proveedores Activos"
-          value={loading ? '...' : (supplierStats?.activeSuppliers ?? 0)}
+          value={loading ? '…' : (supplierStats?.activeSuppliers ?? 0)}
           icon={Building2}
           iconClassName="bg-violet-100 text-violet-600"
           sparklineData={[
@@ -85,17 +86,17 @@ export function ComprasTab({ data, loading }: ComprasTabProps) {
           </CardHeader>
           <CardContent className="space-y-3">
             {[
-              { label: 'Borrador', value: poStats?.draftOrders ?? 0, color: 'bg-gray-100 text-gray-700' },
+              { label: 'Borrador', value: poStats?.draftOrders ?? 0, color: 'bg-zinc-100 text-zinc-700' },
               { label: 'Enviadas', value: poStats?.sentOrders ?? 0, color: 'bg-blue-100 text-blue-700' },
-              { label: 'Confirmadas', value: poStats?.confirmedOrders ?? 0, color: 'bg-purple-100 text-purple-700' },
+              { label: 'Confirmadas', value: poStats?.confirmedOrders ?? 0, color: 'bg-violet-100 text-violet-700' },
               { label: 'Recibidas', value: poStats?.receivedOrders ?? 0, color: 'bg-green-100 text-green-700' },
               { label: 'Canceladas', value: poStats?.cancelledOrders ?? 0, color: 'bg-red-100 text-red-700' },
             ].map((item) => (
-              <div key={item.label} className="flex items-center justify-between rounded-2xl border border-gray-200/70 bg-[#fbfcf8] p-3">
+              <div key={item.label} className="flex items-center justify-between rounded-2xl border border-zinc-200/70 bg-[#fbfcf8] p-3">
                 <span className={cn('text-xs font-medium px-2 py-1 rounded-full', item.color)}>
                   {item.label}
                 </span>
-                <span className="text-sm font-semibold text-gray-900">{loading ? '—' : item.value}</span>
+                <span className="text-sm font-semibold text-zinc-900">{loading ? '—' : item.value}</span>
               </div>
             ))}
           </CardContent>
@@ -105,27 +106,27 @@ export function ComprasTab({ data, loading }: ComprasTabProps) {
         <Card className="lg:col-span-4">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Proveedores</CardTitle>
-            <a href="/proveedores" className="text-sm text-primary hover:text-primary/80 font-medium">
+            <Link href="/proveedores" className="text-sm text-primary hover:text-primary/80 font-medium">
               Ver todos
-            </a>
+            </Link>
           </CardHeader>
           <CardContent className="space-y-3">
             {[
-              { label: 'Total proveedores', value: supplierStats?.totalSuppliers ?? 0, color: 'text-gray-900' },
+              { label: 'Total proveedores', value: supplierStats?.totalSuppliers ?? 0, color: 'text-zinc-900' },
               { label: 'Activos', value: supplierStats?.activeSuppliers ?? 0, color: 'text-green-700' },
-              { label: 'Inactivos', value: supplierStats?.inactiveSuppliers ?? 0, color: 'text-gray-500' },
+              { label: 'Inactivos', value: supplierStats?.inactiveSuppliers ?? 0, color: 'text-zinc-500' },
               { label: 'Nuevos (último mes)', value: supplierStats?.newSuppliersLastMonth ?? 0, color: 'text-blue-700' },
             ].map((item) => (
-              <div key={item.label} className="flex items-center justify-between rounded-2xl border border-gray-200/70 bg-[#fbfcf8] p-3">
-                <span className="text-sm text-gray-700">{item.label}</span>
+              <div key={item.label} className="flex items-center justify-between rounded-2xl border border-zinc-200/70 bg-[#fbfcf8] p-3">
+                <span className="text-sm text-zinc-700">{item.label}</span>
                 <span className={cn('text-sm font-semibold', item.color)}>
                   {loading ? '—' : item.value}
                 </span>
               </div>
             ))}
-            <div className="flex items-center justify-between rounded-2xl border border-gray-200/70 bg-[#fbfcf8] p-3">
-              <span className="text-sm text-gray-700">Total compras históricas</span>
-              <span className="text-sm font-semibold text-gray-900">
+            <div className="flex items-center justify-between rounded-2xl border border-zinc-200/70 bg-[#fbfcf8] p-3">
+              <span className="text-sm text-zinc-700">Total compras históricas</span>
+              <span className="text-sm font-semibold text-zinc-900">
                 {loading ? '—' : formatCurrency(supplierStats?.totalPurchases ?? 0)}
               </span>
             </div>
@@ -136,35 +137,37 @@ export function ComprasTab({ data, loading }: ComprasTabProps) {
         <Card className="lg:col-span-4">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Órdenes Recientes</CardTitle>
-            <a href="/proveedores" className="text-sm text-primary hover:text-primary/80 font-medium">
+            <Link href="/proveedores" className="text-sm text-primary hover:text-primary/80 font-medium">
               Ver todas
-            </a>
+            </Link>
           </CardHeader>
           <CardContent className="space-y-2 p-0 pb-4">
             {loading ? (
-              <p className="text-sm text-gray-500 px-6 py-4">Cargando...</p>
+              <p className="text-sm text-zinc-500 px-6 py-4">Cargando…</p>
             ) : recentOrders.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center px-6">
-                <FileText className="w-8 h-8 text-gray-300 mb-2" />
-                <p className="text-sm text-gray-500">Sin órdenes recientes</p>
+                <FileText className="size-8 text-zinc-300 mb-2" />
+                <p className="text-sm text-zinc-500">Sin órdenes recientes</p>
               </div>
             ) : (
               recentOrders.map((order) => (
                 <div
                   key={order.id}
-                  className="mx-3 flex items-center justify-between rounded-2xl border border-transparent px-4 py-3 transition-colors hover:border-gray-200 hover:bg-gray-50"
+                  className="mx-3 flex items-center justify-between rounded-2xl border border-transparent px-4 py-3 transition-colors hover:border-zinc-200 hover:bg-zinc-50"
                 >
                   <div>
                     <p className="text-sm font-medium text-primary">{order.code}</p>
-                    <p className="text-xs text-gray-500">{order.supplierName}</p>
-                    <p className="text-xs text-gray-400">{formatDate(new Date(order.createdAt))}</p>
+                    <p className="text-xs text-zinc-500">{order.supplierName}</p>
+                    <p className="text-xs text-zinc-400">
+                      {formatDate(order.createdAt)}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-gray-900">{formatCurrency(order.total)}</p>
+                    <p className="text-sm font-semibold text-zinc-900">{formatCurrency(order.total)}</p>
                     <span
                       className={cn(
                         'text-xs font-medium px-2 py-0.5 rounded-full',
-                        PURCHASE_ORDER_STATUS_COLORS[order.status as PurchaseOrderStatus] ?? 'bg-gray-100 text-gray-700',
+                        PURCHASE_ORDER_STATUS_COLORS[order.status as PurchaseOrderStatus] ?? 'bg-zinc-100 text-zinc-700',
                       )}
                     >
                       {PURCHASE_ORDER_STATUS_LABELS[order.status as PurchaseOrderStatus] ?? order.status}

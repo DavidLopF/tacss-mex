@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
-  const router = useRouter();
+  const { push } = useRouter();
   const { settings } = useCompany();
 
   const [email, setEmail] = useState('');
@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
     try {
       await forgotPassword({ email });
       // Navigate to reset-password page with email pre-filled
-      router.push(`/reset-password?email=${encodeURIComponent(email)}`);
+      push(`/reset-password?email=${encodeURIComponent(email)}`);
     } catch (err) {
       setError(
         err instanceof Error
@@ -57,14 +57,14 @@ export default function ForgotPasswordPage() {
       >
         {/* Decorative shapes */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-20 -left-20 w-96 h-96 rounded-full bg-white/5 animate-pulse" />
+            <div className="absolute -top-20 -left-20 size-96 rounded-full bg-white/5 animate-pulse" />
+            <div
+              className="absolute top-1/3 -right-16 size-72 rounded-full bg-white/5"
+              style={{ animation: 'pulse 900ms ease-in-out infinite' }}
+            />
           <div
-            className="absolute top-1/3 -right-16 w-72 h-72 rounded-full bg-white/5"
-            style={{ animation: 'pulse 4s ease-in-out infinite' }}
-          />
-          <div
-            className="absolute -bottom-12 left-1/4 w-80 h-80 rounded-full bg-white/5"
-            style={{ animation: 'pulse 5s ease-in-out infinite 1s' }}
+            className="absolute -bottom-12 left-1/4 size-80 rounded-full bg-white/5"
+            style={{ animation: 'pulse 900ms ease-in-out infinite 1s' }}
           />
           <div
             className="absolute inset-0 opacity-[0.03]"
@@ -80,14 +80,14 @@ export default function ForgotPasswordPage() {
         <div className="relative z-10 text-center px-12 animate-fadeIn">
           <div className="flex justify-center mb-8">
             <div
-              className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-2xl border border-white/20 animate-slideUp"
-              style={{ animation: 'float 6s ease-in-out infinite' }}
+              className="size-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-2xl border border-white/20 animate-slideUp"
+              style={{ animation: 'float 900ms ease-in-out infinite' }}
             >
-              <KeyRound className="w-10 h-10 text-white" />
+              <KeyRound className="size-10 text-white" />
             </div>
           </div>
 
-          <h1 className="text-4xl font-bold text-white mb-4 tracking-tight animate-slideUp" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
+          <h1 className="text-4xl font-semibold text-white mb-4 tracking-tight animate-slideUp" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
             Recupera tu acceso
           </h1>
           <p className="text-lg text-white/80 mb-12 max-w-sm mx-auto leading-relaxed animate-slideUp" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
@@ -103,7 +103,7 @@ export default function ForgotPasswordPage() {
             ].map((item) => (
               <div key={item.step} className="flex items-center gap-3">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                  className={`size-8 rounded-full flex items-center justify-center text-sm font-semibold ${
                     item.active
                       ? 'bg-white text-blue-600'
                       : 'bg-white/10 text-white/60 border border-white/20'
@@ -121,23 +121,23 @@ export default function ForgotPasswordPage() {
       </div>
 
       {/* ═══ Panel Derecho – Formulario ═══ */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-zinc-50">
         <div className="w-full max-w-md animate-slideUp">
           {/* Back link */}
           <Link
             href="/login"
-            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors mb-8"
+            className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-700 transition-colors mb-8"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="size-4" />
             Volver al inicio de sesión
           </Link>
 
           {/* Header */}
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl font-semibold text-zinc-900 mb-2">
               ¿Olvidaste tu contraseña?
             </h2>
-            <p className="text-gray-500">
+            <p className="text-zinc-500">
               Ingresa tu correo electrónico y te enviaremos un código para restablecer tu contraseña.
             </p>
           </div>
@@ -146,18 +146,18 @@ export default function ForgotPasswordPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm flex items-center gap-2 animate-slideUp">
-                <div className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
+                <div className="size-2 rounded-full bg-red-500 flex-shrink-0" />
                 {error}
               </div>
             )}
 
             {/* Email */}
             <div className="space-y-1.5">
-              <label htmlFor="email" className="text-sm font-medium text-gray-700 block">
+              <label htmlFor="email" className="text-sm font-medium text-zinc-700 block">
                 Correo electrónico
               </label>
               <div className="relative group">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400 transition-colors group-focus-within:text-blue-600" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4.5 text-zinc-400 transition-colors group-focus-within:text-blue-600" />
                 <input
                   id="email"
                   type="email"
@@ -165,8 +165,7 @@ export default function ForgotPasswordPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tu@email.com"
                   autoComplete="email"
-                  autoFocus
-                  className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:border-gray-300"
+                  className="w-full pl-11 pr-4 py-3 bg-white border border-zinc-200 rounded-xl text-sm text-zinc-900 placeholder:text-zinc-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:border-zinc-300"
                 />
               </div>
             </div>
@@ -183,13 +182,13 @@ export default function ForgotPasswordPage() {
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Enviando código...
+                  <Loader2 className="size-4 animate-spin" />
+                  Enviando código…
                 </>
               ) : (
                 <>
                   Enviar código de verificación
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="size-4" />
                 </>
               )}
             </button>
@@ -197,7 +196,7 @@ export default function ForgotPasswordPage() {
 
           {/* Footer */}
           <div className="mt-8 text-center">
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-zinc-400" suppressHydrationWarning>
               © {new Date().getFullYear()} {settings.companyName}. Todos los derechos reservados.
             </p>
           </div>

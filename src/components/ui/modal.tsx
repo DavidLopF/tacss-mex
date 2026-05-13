@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +13,7 @@ interface ModalProps {
   className?: string;
   /** Removes inner padding and scroll so the child can own the full layout */
   noPadding?: boolean;
+  onOpen?: () => void;
 }
 
 const sizeStyles = {
@@ -24,7 +25,8 @@ const sizeStyles = {
   full: 'max-w-[95vw]',
 };
 
-export function Modal({ isOpen, onClose, title, children, size = 'lg', className, noPadding }: ModalProps) {
+export function Modal({ isOpen, onClose, title, children, size = 'lg', className, noPadding, onOpen }: ModalProps) {
+  const wasOpen = useRef(false);
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -33,6 +35,9 @@ export function Modal({ isOpen, onClose, title, children, size = 'lg', className
     };
 
     if (isOpen) {
+      if (!wasOpen.current) {
+        onOpen?.();
+      }
       document.addEventListener('keydown', handleEscape);
       // Prevent body scroll when modal is open
       document.body.style.overflow = 'hidden';
@@ -42,7 +47,11 @@ export function Modal({ isOpen, onClose, title, children, size = 'lg', className
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, onOpen]);
+
+  useEffect(() => {
+    wasOpen.current = isOpen;
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

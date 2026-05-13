@@ -1,0 +1,258 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(17, 24, 39, 0.45);
+  animation: backdropIn 0.18s ease-out both;
+}
+
+.modal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 640px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(16, 24, 40, 0.18);
+  animation: slideUp 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.header {
+  padding: 24px 28px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 1;
+}
+
+.headerLabel {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  color: #1f2937;
+}
+
+.closeButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+}
+
+.closeButton:hover {
+  background: #f9fafb;
+}
+
+.content {
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #1f2937;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stepHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.stepBadge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--primary-color, #2563eb);
+  flex-shrink: 0;
+}
+
+.stepTitle {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.bodyText {
+  color: #4b5563;
+  margin: 0;
+}
+
+.bodyTextSpaced {
+  color: #4b5563;
+  margin: 0 0 12px;
+}
+
+.infoBox {
+  background: #fafbf7;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 12px;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #9ca3af;
+  flex-shrink: 0;
+}
+
+.dotPrimary {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--primary-color, #2563eb);
+  flex-shrink: 0;
+}
+
+.tableWrap {
+  background: #fafbf7;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.table {
+  width: 100%;
+  font-size: 12.5px;
+  border-collapse: collapse;
+}
+
+.tableHeaderRow {
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+}
+
+.tableHeaderCell {
+  text-align: left;
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+.tableHeaderCellRight {
+  text-align: right;
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+.tableRow {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.tableCell {
+  padding: 8px 12px;
+}
+
+.tableCellRight {
+  padding: 8px 12px;
+  text-align: right;
+}
+
+.mono {
+  font-family: var(--font-mono, monospace);
+  font-variant-numeric: tabular-nums;
+}
+
+.inlineCode {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+}
+
+.list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  color: #4b5563;
+  font-size: 12.5px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.listWide {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  color: #4b5563;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.footer {
+  padding: 16px 28px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  background: #fafbf7;
+  position: sticky;
+  bottom: 0;
+}
+
+.footerButton {
+  background: var(--primary-color, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}

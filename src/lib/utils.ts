@@ -11,12 +11,20 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
-export function formatDate(date: Date): string {
+export function formatDate(date: Date | string | null | undefined): string {
+  if (!date) return 'N/A';
+
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+
+  if (isNaN(dateObj.getTime())) {
+    return 'Fecha inválida';
+  }
+
   return new Intl.DateTimeFormat('es-MX', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
-  }).format(date);
+  }).format(dateObj);
 }
 
 export function formatDateTime(date: Date | string | null | undefined): string {
