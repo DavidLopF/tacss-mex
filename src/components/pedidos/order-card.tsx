@@ -4,7 +4,7 @@ import { Calendar, User, Package, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui';
 import { Pedido } from '@/types';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
-import { getOrderClientCountLabel } from '@/lib/order-clients';
+import { getOrderClientLabel } from '@/lib/order-clients';
 import { ChangeStatusMenu } from './change-status-menu';
 import { OrderStatusCode } from '@/services/orders';
 import { useCfdiStore } from '@/stores';
@@ -100,7 +100,7 @@ export function OrderCard({ pedido, onClick, onStatusChange }: OrderCardProps) {
           <User className="w-3 h-3 text-gray-500" />
           <p className="text-sm font-semibold leading-snug text-gray-900 break-words">{pedido.numero}</p>
         </div>
-        <p className="ml-5 text-xs text-gray-600 break-words">{getOrderClientCountLabel(pedido)}</p>
+        <p className="ml-5 text-xs text-gray-600 break-words">{getOrderClientLabel(pedido)}</p>
         {pedido.clienteEmail && (
           <p className="ml-5 text-xs text-gray-500 break-all">{pedido.clienteEmail}</p>
         )}

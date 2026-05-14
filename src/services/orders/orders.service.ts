@@ -1,21 +1,29 @@
 import { get, post, put, getPaginated } from '../http-client';
-import { 
-  CreateOrderDto, 
-  Order, 
-  OrderStatus, 
-  ChangeOrderStatusDto, 
-  OrderProductItem, 
-  OrderProductFiltersDto, 
-  OrderProductsPaginatedResponse 
+import {
+  CreateOrderDto,
+  Order,
+  OrderStatus,
+  ChangeOrderStatusDto,
+  OrderProductItem,
+  OrderProductFiltersDto,
+  OrderProductsPaginatedResponse,
+  GetOrdersFiltersDto,
 } from './orders.types';
 
 /**
- * Obtiene todos los pedidos agrupados por estado
- * El backend responde con { success: true, data: OrderStatus[] }
- * El http-client automáticamente extrae y devuelve solo el .data
+ * Obtiene pedidos agrupados por estado.
+ * Pasa los filtros como query params — si el backend los soporta filtra
+ * server-side; si los ignora, retorna todos y el cliente pagina/filtra.
+ *
+ * GET /api/orders?page=1&limit=25&search=...&statusCode=COTIZADO
  */
-export async function getOrders(): Promise<OrderStatus[]> {
-  return get<OrderStatus[]>('/api/orders');
+export async function getOrders(filters: GetOrdersFiltersDto = {}): Promise<OrderStatus[]> {
+  return get<OrderStatus[]>('/api/orders', {
+    ...(filters.page      !== undefined && { page: filters.page }),
+    ...(filters.limit     !== undefined && { limit: filters.limit }),
+    ...(filters.search                  && { search: filters.search }),
+    ...(filters.statusCode              && { statusCode: filters.statusCode }),
+  });
 }
 
 /**

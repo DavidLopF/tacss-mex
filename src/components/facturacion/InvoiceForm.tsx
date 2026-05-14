@@ -348,7 +348,7 @@ export const InvoiceForm: React.FC<Props> = ({
             ))}
 
             <p className="mt-3 text-right text-xs text-gray-500">
-              Subtotal partida: <span className="font-semibold text-gray-900">${((item.quantity * item.unitPrice) - (item.discount ?? 0)).toFixed(2)}</span>
+              Subtotal productos: <span className="font-semibold text-gray-900">${((item.quantity * item.unitPrice) - (item.discount ?? 0)).toFixed(2)}</span>
             </p>
           </div>
         ))}

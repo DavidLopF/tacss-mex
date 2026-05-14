@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, Button, NumericInput } from '@/components/ui';
 import {
   Search, Plus, Minus, Trash2, ShoppingCart, DollarSign, History,
@@ -8,10 +8,12 @@ import {
   X, User, MapPin, Layers, Tag, Info, RotateCcw, AlertTriangle,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { exportPedidoPDF, exportPedidoExcel } from '@/lib/export-pedido';
 import { useDebounce } from '@/lib/hooks';
 import { useCompany } from '@/lib/company-context';
+import { useToast } from '@/lib/hooks';
 import { getOrderProducts, OrderProductItem, CreateOrderDto, ClientShareDto } from '@/services/orders';
-import { getClients, getClientPriceHistory, ClientDetail, PriceHistoryItem } from '@/services/clients';
+import { getClients, getClientById, getClientPriceHistory, ClientDetail, PriceHistoryItem } from '@/services/clients';
 import { getProductPriceTiers, getPriceZones, ProductPriceTier, PriceZone } from '@/services/price-zones';
 import { getCategoryDiscounts, CategoryDiscount } from '@/services/discounts';
 import { Pedido } from '@/types';
@@ -60,6 +62,15 @@ function PriceInput({
 }
 
 // ── Helpers (fuera del componente para evitar re-creaciones) ──────────────────
+
+/** Ordena líneas de carrito por masterBox de menor a mayor; sin masterBox al final */
+function sortCarritoByPackage<T extends { producto: { masterBox?: number | null } }>(lines: T[]): T[] {
+  return [...lines].sort((a, b) => {
+    const aBox = a.producto.masterBox ?? Infinity;
+    const bBox = b.producto.masterBox ?? Infinity;
+    return aBox - bBox;
+  });
+}
 
 function resolveZoneTier(
   tiers: ProductPriceTier[],
@@ -958,7 +969,7 @@ function ZoneVariantPriceBook({ product, tiers, allCategoryDiscounts, clientZone
 interface CreateOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (dto: CreateOrderDto) => void;
+  onSave: (dto: CreateOrderDto) => Promise<void> | void;
   editPedido?: Pedido;
   /** Pedido a usar como plantilla para copiar (siempre crea uno nuevo) */
   copyFromPedido?: Pedido;
@@ -982,11 +993,17 @@ const PRODUCTS_PER_PAGE = 8;
 // ── Componente principal ──────────────────────────────────────────────────────
 
 export function CreateOrderModal({ isOpen, onClose, onSave, editPedido, copyFromPedido }: CreateOrderModalProps) {
+  const toast = useToast();
   const { settings } = useCompany();
   const primary = settings.primaryColor;
   const IVA_RATE = (settings.defaultIvaPct ?? 16) / 100;
   const primaryBg = primary + '18';
   const primaryBgMid = primary + '30';
+
+  // ── Ref para controlar que el pre-relleno solo ocurra una vez por apertura del modal.
+  // Protege contra re-renders del padre que entreguen una nueva referencia de editPedido/copyFromPedido
+  // y disparen el useEffect de nuevo, reseteando el carrito con datos originales.
+  const prefillDoneRef = useRef(false);
 
   // ── Estado principal
   const [clienteId, setClienteId] = useState<number | ''>('');
@@ -994,6 +1011,7 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido, copyFrom
   const [carrito, setCarrito] = useState<LineaCarrito[]>([]);
   const [notas, setNotas] = useState('');
   const [includesIva, setIncludesIva] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   // ── Cliente seleccionado
   const [selectedCliente, setSelectedCliente] = useState<ClientDetail | null>(null);
@@ -1062,11 +1080,31 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido, copyFrom
     };
   }, [isOpen, onClose]);
 
-  // ── Pre-rellenar al editar o copiar
+  // ── Pre-rellenar al editar o copiar.
+  // El ref `prefillDoneRef` garantiza que este bloque solo se ejecuta UNA VEZ
+  // cuando el modal abre (transición cerrado→abierto), aunque el padre
+  // re-renderice y cambie la referencia de editPedido/copyFromPedido.
   useEffect(() => {
+    if (!isOpen) {
+      // Modal cerrado: resetear el flag para la próxima apertura
+      prefillDoneRef.current = false;
+      return;
+    }
     const source = editPedido ?? copyFromPedido;
-    if (isOpen && source) {
+    if (isOpen && source && !prefillDoneRef.current) {
+      prefillDoneRef.current = true;
       setClienteId(parseInt(source.clienteId));
+      setSelectedCliente({
+        id: parseInt(source.clienteId),
+        name: source.clienteNombre,
+        document: null,
+        isActive: true,
+        createdAt: '',
+        totalOrders: 0,
+        totalSpent: 0,
+        priceZoneId: null,
+        priceZone: null,
+      });
       setNotas(editPedido ? (source.notas || '') : ''); // Al copiar no trasladamos notas
 
       // ── Restaurar clientes adicionales y shares si es pedido multi-cliente
@@ -1136,8 +1174,28 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido, copyFrom
           usandoPrecioHistorico: false,
         };
       });
-      setCarrito(items);
+      setCarrito(sortCarritoByPackage(items));
     }
+  }, [isOpen, editPedido, copyFromPedido]);
+
+  useEffect(() => {
+    const source = editPedido ?? copyFromPedido;
+    if (!isOpen || !source) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const detail = await getClientById(source.clienteId);
+        if (!cancelled) {
+          setSelectedCliente(detail);
+          setClienteId(detail.id);
+        }
+      } catch {
+        // noop
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [isOpen, editPedido, copyFromPedido]);
 
   // ── Cargar datos al abrir modal
@@ -1156,7 +1214,13 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido, copyFrom
         search: search || undefined,
         stockStatus: search ? 'all' : 'in-stock',
       });
-      setProductos(response.items);
+      // Ordenar de menor a mayor por masterBox; productos sin masterBox van al final
+      const sorted = [...response.items].sort((a, b) => {
+        const aBox = a.masterBox ?? Infinity;
+        const bBox = b.masterBox ?? Infinity;
+        return aBox - bBox;
+      });
+      setProductos(sorted);
       setTotalPages(response.totalPages);
       setTotalProducts(response.total);
       setCurrentPage(response.page);
@@ -1273,26 +1337,46 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido, copyFrom
     }
 
     setCarrito(prev => {
-      const idx = prev.findIndex(l => l.producto.id === producto.id && l.precioUnitario === precioFinal);
+      const idx = prev.findIndex(l => l.producto.id === producto.id);
+      const existingQty = idx !== -1 ? prev[idx].cantidad : 0;
+      const maxStock = Math.max(0, producto.stock ?? 0);
+      if (maxStock <= 0) {
+        toast?.warning?.(`"${producto.name}" no tiene stock disponible.`);
+        return prev;
+      }
+      const qtyToAdd = Math.min(qty, Math.max(0, maxStock - existingQty));
+      if (qtyToAdd <= 0) {
+        toast?.warning?.(`"${producto.name}" no tiene stock disponible.`);
+        return prev;
+      }
+      if (qtyToAdd < qty) {
+        toast?.warning?.(`Solo hay ${maxStock} en stock para "${producto.name}". Se agregó ${qtyToAdd}.`);
+      }
       if (idx !== -1) {
+        const existing = prev[idx];
+        const updatedQty = existing.cantidad + qtyToAdd;
+        const updatedSubtotal = existing.precioUnitario * updatedQty;
+        setQtyByProduct(prevQty => ({ ...prevQty, [producto.id]: updatedQty }));
+        toast?.warning?.(`"${producto.name}" ya estaba en el carrito. Se sumó la cantidad.`);
         return prev.map((linea, i) => i === idx
-          ? { ...linea, cantidad: linea.cantidad + qty, subtotal: linea.precioUnitario * (linea.cantidad + qty) }
+          ? { ...linea, cantidad: updatedQty, subtotal: updatedSubtotal }
           : linea
         );
       }
       carritoCounter++;
       const nuevaLinea: LineaCarrito = {
         id: `${producto.id}-${carritoCounter}`,
-        producto, cantidad: qty,
+        producto, cantidad: qtyToAdd,
         precioUnitario: precioFinal,
         precioLista: precioBase,
-        subtotal: precioFinal * qty,
+        subtotal: precioFinal * qtyToAdd,
         usandoPrecioHistorico: precioPersonalizado !== undefined,
         zoneTierLabel,
         suggestedPrice,
         catDiscountLabel,
       };
-      return [...prev, nuevaLinea];
+      setQtyByProduct(prevQty => ({ ...prevQty, [producto.id]: qtyToAdd }));
+      return sortCarritoByPackage([...prev, nuevaLinea]);
     });
 
     setExpandedHistorial(null);
@@ -1306,30 +1390,60 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido, copyFrom
     setCarrito(prev =>
       prev.map(linea => {
         if (linea.id !== lineaId) return linea;
+        const maxStock = Math.max(0, linea.producto.stock ?? 0);
+        const cappedQty = maxStock > 0 ? Math.min(cantidad, maxStock) : cantidad;
+        if (maxStock > 0 && cappedQty < cantidad) {
+          toast?.warning?.(`Solo hay ${maxStock} en stock para "${linea.producto.name}".`);
+        }
+        setQtyByProduct(prevQty => ({ ...prevQty, [linea.producto.id]: cappedQty }));
         // Recalcular precio sugerido con nueva cantidad
         let suggestedPrice = linea.suggestedPrice;
         if (zoneCode && !linea.usandoPrecioHistorico) {
           const tiers = tierCache.get(linea.producto.id);
           if (tiers) {
             const pricing = computeProductPrice(
-              linea.producto.price, tiers, categoryDiscounts, linea.producto.category, zoneCode, cantidad
+              linea.producto.price, tiers, categoryDiscounts, linea.producto.category, zoneCode, cappedQty
             );
             suggestedPrice = pricing.finalPrice;
           }
         }
-        return { ...linea, cantidad, subtotal: linea.precioUnitario * cantidad, suggestedPrice };
+        return { ...linea, cantidad: cappedQty, subtotal: linea.precioUnitario * cappedQty, suggestedPrice };
       })
     );
-  }, [selectedCliente, tierCache, categoryDiscounts]);
+  }, [selectedCliente, tierCache, categoryDiscounts, toast]);
 
   // ── Actualizar precio unitario
   const actualizarPrecio = (lineaId: string, precio: number) => {
     if (!Number.isFinite(precio) || precio < 0) return;
+    const zoneCode = selectedCliente?.priceZone?.code;
     setCarrito(prev =>
-      prev.map(linea => linea.id === lineaId
-        ? { ...linea, precioUnitario: precio, subtotal: precio * linea.cantidad, usandoPrecioHistorico: false }
-        : linea
-      )
+      prev.map(linea => {
+        if (linea.id !== lineaId) return linea;
+        // Garantizar que suggestedPrice esté disponible para mostrar la referencia
+        // al usuario cuando hace un override manual.
+        // Puede estar undefined en dos casos:
+        //   1. Producto añadido con precio histórico (suggestedPrice se omitió)
+        //   2. Líneas cargadas desde un pedido editado/copiado (nunca se calculó)
+        // Si hay zona de precios y los tiers ya están en caché, calcularlo ahora.
+        let suggestedPrice = linea.suggestedPrice;
+        if (suggestedPrice === undefined && zoneCode) {
+          const tiers = tierCache.get(linea.producto.id);
+          if (tiers?.length) {
+            const pricing = computeProductPrice(
+              linea.producto.price, tiers, categoryDiscounts,
+              linea.producto.category, zoneCode, linea.cantidad
+            );
+            suggestedPrice = pricing.finalPrice;
+          }
+        }
+        return {
+          ...linea,
+          precioUnitario: precio,
+          subtotal: precio * linea.cantidad,
+          usandoPrecioHistorico: false,
+          suggestedPrice,
+        };
+      })
     );
   };
 
@@ -1347,15 +1461,22 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido, copyFrom
   };
 
   // ── Totales
+  // subtotal = suma de (precioUnitario × cantidad) — el precio YA tiene todos los descuentos aplicados.
   const subtotal = carrito.reduce((sum, linea) => sum + linea.subtotal, 0);
-  const discountTotal = carrito.reduce((sum, l) => sum + Math.max(0, l.precioLista * l.cantidad - l.precioUnitario * l.cantidad), 0);
-  const baseForTax = subtotal - discountTotal;
+  // discountTotal = ahorro informativo (precio lista - precio final) × cantidad.
+  // Solo se usa para mostrar "descuento" al usuario; NO se resta de la base imponible
+  // porque subtotal ya refleja el precio descontado.
+  const discountTotal = carrito.reduce(
+    (sum, l) => sum + Math.max(0, l.precioLista * l.cantidad - l.precioUnitario * l.cantidad),
+    0
+  );
+  const baseForTax = subtotal; // subtotal ya es el neto descontado — no hay que volver a restar
   const iva = includesIva ? baseForTax * IVA_RATE : 0;
   const total = baseForTax + iva;
 
   // ── Guardar pedido
-  const handleGuardar = () => {
-    if (!clienteId || carrito.length === 0) return;
+  const handleGuardar = async () => {
+    if (!clienteId || carrito.length === 0 || isSaving) return;
 
     // Construir clientShares si hay más de un cliente
     let clientShares: ClientShareDto[] | undefined;
@@ -1366,24 +1487,47 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido, copyFrom
       }));
     }
 
+    const zoneCode = selectedCliente?.priceZone?.code;
     const dto: CreateOrderDto = {
       clientId: clienteId as number,
-      items: carrito.map(linea => ({
-        variantId: linea.producto.id,
-        qty: linea.cantidad,
-        unitPrice: linea.precioUnitario,
-        listPrice: linea.precioLista,
-        description: linea.producto.variantName
-          ? `${linea.producto.name} - ${linea.producto.variantName}`
-          : linea.producto.name,
-      })),
+      items: carrito.map(linea => {
+        const tiers = zoneCode ? tierCache.get(linea.producto.id) : undefined;
+        const pricing =
+          zoneCode && tiers
+            ? computeProductPrice(linea.producto.price, tiers, categoryDiscounts, linea.producto.category, zoneCode, linea.cantidad)
+            : null;
+        const hasManualOverride =
+          linea.suggestedPrice !== undefined && Math.abs(linea.precioUnitario - linea.suggestedPrice) > 0.01;
+        const unitPrice = hasManualOverride || linea.usandoPrecioHistorico || !pricing
+          ? linea.precioUnitario
+          : pricing.finalPrice;
+        const listPrice = linea.producto.price || linea.precioLista;
+
+        return {
+          variantId: linea.producto.id,
+          qty: linea.cantidad,
+          unitPrice,
+          listPrice,
+          description: linea.producto.variantName
+            ? `${linea.producto.name} - ${linea.producto.variantName}`
+            : linea.producto.name,
+        };
+      }),
       currency: 'MXN',
       includesIva,
       taxRate: includesIva ? IVA_RATE : 0,
       ...(clientShares ? { clientShares } : {}),
     };
-    onSave(dto);
-    handleClose();
+    setIsSaving(true);
+    try {
+      await onSave(dto);
+      handleClose();
+    } catch {
+      // El error ya fue manejado (toast) en el handler del padre.
+      // No cerramos el modal para que el usuario pueda reintentar.
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleClose = () => {
@@ -1410,11 +1554,48 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido, copyFrom
     onClose();
   };
 
-  const handleDescargarPDF = () => {
-    alert('Funcionalidad de PDF en desarrollo');
+  /**
+   * Construye un Pedido temporal a partir del estado actual del carrito
+   * para pasarlo a las funciones de exportación (PDF / Excel).
+   * No requiere que el pedido esté guardado en backend.
+   */
+  const buildPedidoSnapshot = (): Pedido => ({
+    id:            editPedido?.id ?? copyFromPedido?.id ?? 'borrador',
+    numero:        editPedido?.numero ?? copyFromPedido?.numero ?? 'BORRADOR',
+    clienteId:     String(selectedCliente?.id ?? editPedido?.clienteId ?? copyFromPedido?.clienteId ?? ''),
+    clienteNombre: selectedCliente?.name ?? editPedido?.clienteNombre ?? copyFromPedido?.clienteNombre ?? 'Cliente no seleccionado',
+    clienteEmail: editPedido?.clienteEmail ?? copyFromPedido?.clienteEmail ?? undefined,
+    clienteTelefono: selectedCliente?.phone ?? editPedido?.clienteTelefono ?? copyFromPedido?.clienteTelefono ?? undefined,
+    estado:        'cotizado',
+    lineas: carrito.map(linea => ({
+      id:              linea.id,
+      productoId:      String(linea.producto.productId),
+      variacionId:     String(linea.producto.id),
+      productoNombre:  linea.producto.name,
+      variacionNombre: linea.producto.variantName ?? '',
+      cantidad:        linea.cantidad,
+      precioUnitario:  linea.precioUnitario,
+      subtotal:        linea.subtotal,
+    })),
+    subtotal,
+    discountTotal,
+    taxRate:  includesIva ? IVA_RATE : 0,
+    impuestos: iva,
+    total,
+    notas:    notas || undefined,
+    usuarioId: '',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
+  const handleDescargarPDF = async () => {
+    if (carrito.length === 0) return;
+    await exportPedidoPDF(buildPedidoSnapshot());
   };
-  const handleDescargarExcel = () => {
-    alert('Funcionalidad de Excel en desarrollo');
+
+  const handleDescargarExcel = async () => {
+    if (carrito.length === 0) return;
+    await exportPedidoExcel(buildPedidoSnapshot());
   };
 
   // ── Badge de stock
@@ -2321,11 +2502,15 @@ export function CreateOrderModal({ isOpen, onClose, onSave, editPedido, copyFrom
               </div>
               <Button
                 onClick={handleGuardar}
-                disabled={!clienteId || carrito.length === 0}
+                disabled={!clienteId || carrito.length === 0 || isSaving}
                 className="w-full flex items-center justify-center gap-2 transition-all duration-200 hover:scale-105 active:scale-95"
               >
                 <DollarSign className="w-4 h-4" />
-                {editPedido ? 'Guardar Cambios' : 'Crear Cotización'}
+                {isSaving
+                  ? 'Guardando…'
+                  : editPedido
+                    ? 'Guardar Cambios'
+                    : 'Crear Cotización'}
               </Button>
               <Button variant="outline" onClick={handleClose} className="w-full transition-all duration-200 hover:scale-105 active:scale-95">
                 Cancelar

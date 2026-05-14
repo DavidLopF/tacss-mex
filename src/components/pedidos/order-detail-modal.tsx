@@ -30,6 +30,7 @@ import {
   Mail,
 } from 'lucide-react';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { exportPedidoPDF, exportPedidoExcel } from '@/lib/export-pedido';
 
 interface OrderDetailModalProps {
   pedido: Pedido | null;
@@ -101,6 +102,8 @@ export function OrderDetailModal({ pedido, isOpen, onClose, onEdit, onEmitirCFDI
   const [isInfoOpen, setIsInfoOpen] = useState(true);
   const [activeTab, setActiveTab] = useState<'detalle' | 'recibo'>('detalle');
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
   
   const cfdiStatuses = useCfdiStore((s) => s.cfdiStatuses);
@@ -118,6 +121,26 @@ export function OrderDetailModal({ pedido, isOpen, onClose, onEdit, onEmitirCFDI
   const handleEdit = () => {
     if (onEdit) {
       onEdit(pedido);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (!pedido) return;
+    setIsExportingPDF(true);
+    try {
+      await exportPedidoPDF(pedido);
+    } finally {
+      setIsExportingPDF(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    if (!pedido) return;
+    setIsExportingExcel(true);
+    try {
+      await exportPedidoExcel(pedido);
+    } finally {
+      setIsExportingExcel(false);
     }
   };
 
@@ -778,11 +801,25 @@ export function OrderDetailModal({ pedido, isOpen, onClose, onEdit, onEmitirCFDI
               </>
             ) : (
               <>
-                <Button variant="outline" size="sm" className="flex items-center gap-1.5">
-                  <Printer className="w-3.5 h-3.5" />Imprimir
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1.5"
+                  onClick={handleExportPDF}
+                  disabled={isExportingPDF}
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  {isExportingPDF ? 'Generando...' : 'Imprimir PDF'}
                 </Button>
-                <Button variant="outline" size="sm" className="flex items-center gap-1.5">
-                  <Download className="w-3.5 h-3.5" />Exportar
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1.5"
+                  onClick={handleExportExcel}
+                  disabled={isExportingExcel}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  {isExportingExcel ? 'Generando...' : 'Exportar Excel'}
                 </Button>
               </>
             )}

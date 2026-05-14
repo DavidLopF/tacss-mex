@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useShallow } from 'zustand/react/shallow';
 import { Plus, Search } from 'lucide-react';
@@ -16,8 +16,10 @@ import {
   createOrder,
   updateOrder,
   CreateOrderDto,
+  GetOrdersFiltersDto,
 } from '@/services';
 import { useToast, useCrossTabSync } from '@/lib/hooks';
+import { ToastContainer } from '@/components/ui';
 import { PermissionGuard } from '@/components/layout';
 import { useOrdersStore, useCfdiStore } from '@/stores';
 import { broadcastInvalidation } from '@/lib/cross-tab-sync';
@@ -200,6 +202,87 @@ function FilterChips({
   );
 }
 
+// ── Pagination ──────────────────────────────────────────────────────────────
+const PAGE_SIZE = 25;
+
+function PaginationControls({
+  page,
+  totalPages,
+  total,
+  onPrev,
+  onNext,
+}: {
+  page: number;
+  totalPages: number;
+  total: number;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  if (total === 0) return null;
+
+  const from = total === 0 ? 0 : page * PAGE_SIZE + 1;
+  const to   = Math.min((page + 1) * PAGE_SIZE, total);
+  const multiPage = totalPages > 1;
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '10px 32px', borderTop: '1px solid #e6e3db',
+      background: '#fbfaf7', fontSize: 12.5, color: '#6c6a74',
+    }}>
+      <span>
+        {multiPage ? (
+          <>
+            Mostrando{' '}
+            <strong style={{ color: 'var(--foreground)' }}>{from}–{to}</strong> de{' '}
+            <strong style={{ color: 'var(--foreground)' }}>{total}</strong> pedidos
+          </>
+        ) : (
+          <>
+            <strong style={{ color: 'var(--foreground)' }}>{total}</strong>{' '}
+            {total === 1 ? 'pedido' : 'pedidos'} en esta vista
+          </>
+        )}
+      </span>
+
+      {/* Botones solo cuando hay más de una página */}
+      {multiPage && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <button
+            onClick={onPrev}
+            disabled={page === 0}
+            style={{
+              padding: '4px 12px', borderRadius: 6, fontSize: 12.5, border: '1px solid #e6e3db',
+              background: page === 0 ? '#f3f4f6' : 'white', color: page === 0 ? '#d1d5db' : '#374151',
+              cursor: page === 0 ? 'default' : 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            ← Anterior
+          </button>
+          <span style={{
+            padding: '4px 12px', borderRadius: 6, border: '1px solid #e6e3db',
+            background: 'white', fontVariantNumeric: 'tabular-nums',
+          }}>
+            {page + 1} / {totalPages}
+          </span>
+          <button
+            onClick={onNext}
+            disabled={page >= totalPages - 1}
+            style={{
+              padding: '4px 12px', borderRadius: 6, fontSize: 12.5, border: '1px solid #e6e3db',
+              background: page >= totalPages - 1 ? '#f3f4f6' : 'white',
+              color: page >= totalPages - 1 ? '#d1d5db' : '#374151',
+              cursor: page >= totalPages - 1 ? 'default' : 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            Siguiente →
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Page ────────────────────────────────────────────────────────────────────
 export default function PedidosPage() {
   const router = useRouter();
@@ -212,10 +295,15 @@ export default function PedidosPage() {
   const markAsBilled = useCfdiStore((s) => s.markAsBilled);
   const cfdiStatuses = useCfdiStore((s) => s.cfdiStatuses);
 
-  const [view, setView]       = useState<'bandeja' | 'tabla' | 'kanban'>('bandeja');
-  const [filter, setFilter]   = useState<FilterKey>('todos');
-  const [search, setSearch]   = useState('');
+  const [view, setView]         = useState<'bandeja' | 'tabla' | 'kanban'>('bandeja');
+  const [filter, setFilter]     = useState<FilterKey>('todos');
+  const [search, setSearch]     = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+
+  // Debounce search para no re-fetchear en cada tecla
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Pedido | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -241,10 +329,10 @@ export default function PedidosPage() {
     router.push(`/facturacion?${params.toString()}`);
   }, [router, markAsBilled]);
 
-  const loadOrders = useCallback(async () => {
+  const loadOrders = useCallback(async (filters: GetOrdersFiltersDto = {}) => {
     try {
       setLoading(true);
-      const orderStatuses = await getOrders();
+      const orderStatuses = await getOrders(filters);
       setPedidos(mapOrdersToPedidos(orderStatuses));
     } catch (err) {
       console.error('Error al cargar pedidos:', err);
@@ -253,8 +341,28 @@ export default function PedidosPage() {
     }
   }, []);
 
+  // Carga inicial
   useEffect(() => { loadOrders(); }, [loadOrders]);
   useCrossTabSync('orders', loadOrders);
+
+  // Debounce del campo de búsqueda → re-fetch server-side si el backend lo soporta
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 400);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [search]);
+
+  // Cuando el search debounced cambia, re-fetch pasando el término al backend
+  const isFirstSearchRender = useRef(true);
+  useEffect(() => {
+    if (isFirstSearchRender.current) { isFirstSearchRender.current = false; return; }
+    loadOrders(debouncedSearch ? { search: debouncedSearch } : {});
+  }, [debouncedSearch]);
+
+  // Resetear página al cambiar filtro o búsqueda
+  useEffect(() => { setCurrentPage(0); }, [filter, debouncedSearch]);
 
   // Auto-open from ?order=ID
   useEffect(() => {
@@ -294,12 +402,19 @@ export default function PedidosPage() {
     return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [pedidos, filter, search, cfdiStatuses]);
 
-  // Auto-select first order when inbox opens
+  // ── Paginación client-side ────────────────────────────────────────────────
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const pagedFiltered = useMemo(
+    () => filtered.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE),
+    [filtered, currentPage],
+  );
+
+  // Auto-select first order when inbox opens (usa pagedFiltered para seleccionar el primero visible)
   useEffect(() => {
-    if (view === 'bandeja' && !activeId && filtered.length > 0) {
-      setActiveId(filtered[0].id);
+    if (view === 'bandeja' && !activeId && pagedFiltered.length > 0) {
+      setActiveId(pagedFiltered[0].id);
     }
-  }, [view, filtered, activeId]);
+  }, [view, pagedFiltered, activeId]);
 
   // Status change handlers
   const handleNextStep = useCallback(async (pedido: Pedido) => {
@@ -345,6 +460,7 @@ export default function PedidosPage() {
       broadcastInvalidation(['orders', 'inventory']);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Error al crear el pedido');
+      throw err; // propaga el error al modal para que no se cierre
     }
   };
 
@@ -353,12 +469,13 @@ export default function PedidosPage() {
     try {
       await updateOrder(parseInt(editingOrder.id), dto);
       toast.success('Pedido actualizado');
-      setIsEditModalOpen(false);
+      // El cierre del modal lo maneja el propio modal tras await onSave(dto)
       setEditingOrder(null);
       await loadOrders();
       broadcastInvalidation(['orders', 'inventory']);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Error al actualizar el pedido');
+      throw err; // propaga el error al modal para que no se cierre
     }
   };
 
@@ -472,10 +589,10 @@ export default function PedidosPage() {
           </div>
         )}
 
-        {/* Views */}
+        {/* Views — reciben pagedFiltered (slice de PAGE_SIZE) */}
         {!loading && view === 'bandeja' && (
           <InboxView
-            pedidos={filtered}
+            pedidos={pagedFiltered}
             activeId={activeId}
             onSelect={setActiveId}
             onNextStep={handleNextStep}
@@ -486,7 +603,7 @@ export default function PedidosPage() {
         )}
         {!loading && view === 'tabla' && (
           <OrdersTable
-            pedidos={filtered}
+            pedidos={pagedFiltered}
             onOrderClick={(p) => { setActiveId(p.id); setView('bandeja'); }}
             onOrderUpdate={async (p, e) => { /* handled via status change menu */ }}
             onStatusChange={handleStatusChange}
@@ -495,10 +612,21 @@ export default function PedidosPage() {
         )}
         {!loading && view === 'kanban' && (
           <OrdersKanban
-            pedidos={filtered}
+            pedidos={pagedFiltered}
             onOrderClick={(p) => { setActiveId(p.id); setView('bandeja'); }}
             onOrderUpdate={async (p, e) => {}}
             onStatusChange={handleStatusChange}
+          />
+        )}
+
+        {/* Controles de paginación — visibles debajo de cualquier vista */}
+        {!loading && (
+          <PaginationControls
+            page={currentPage}
+            totalPages={totalPages}
+            total={filtered.length}
+            onPrev={() => { setCurrentPage(p => Math.max(0, p - 1)); setActiveId(null); }}
+            onNext={() => { setCurrentPage(p => Math.min(totalPages - 1, p + 1)); setActiveId(null); }}
           />
         )}
 
@@ -521,6 +649,7 @@ export default function PedidosPage() {
           onSave={handleCreateOrder}
           copyFromPedido={copyingOrder ?? undefined}
         />
+        <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>

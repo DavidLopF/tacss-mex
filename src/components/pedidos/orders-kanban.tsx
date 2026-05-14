@@ -4,7 +4,7 @@ import { Pedido, EstadoPedido } from '@/types';
 import { OrderStatusCode } from '@/services/orders';
 import { useCfdiStore } from '@/stores';
 import { formatCurrency } from '@/lib/utils';
-import { getOrderClientCountLabel } from '@/lib/order-clients';
+import { getOrderClientLabel } from '@/lib/order-clients';
 import { CfdiPill } from './cfdi-pill';
 import { STATUS_CONFIG } from './status-pill';
 import { Package } from 'lucide-react';
@@ -57,7 +57,7 @@ function KanbanCard({ pedido, onClick }: { pedido: Pedido; onClick: () => void }
         {pedido.numero}
       </div>
       <div style={{ fontSize: 11.5, color: '#6c6a74', marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {getOrderClientCountLabel(pedido)}
+        {getOrderClientLabel(pedido)}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11.5 }}>
         <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 500 }}>{formatCurrency(pedido.total)}</span>

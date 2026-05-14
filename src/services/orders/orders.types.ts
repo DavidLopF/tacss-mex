@@ -48,6 +48,18 @@ export interface OrderProductItem {
   purchaseUnit?: string | null;
 }
 
+// ── Filtros para listado de pedidos ────────────────────────────────
+export interface GetOrdersFiltersDto {
+  /** Página solicitada (1-indexed). Si el backend lo soporta, filtra server-side. */
+  page?: number;
+  /** Registros por página. */
+  limit?: number;
+  /** Texto libre — busca en código de pedido y nombre de cliente. */
+  search?: string;
+  /** Código de estado (e.g. 'COTIZADO'). Filtra una sola columna del kanban. */
+  statusCode?: string;
+}
+
 export type StockStatusFilter = 'all' | 'in-stock' | 'low-stock' | 'out-of-stock';
 
 export interface OrderProductFiltersDto {

@@ -3,7 +3,7 @@
 import { Pedido } from '@/types';
 import { useCfdiStore } from '@/stores';
 import { formatCurrency } from '@/lib/utils';
-import { getOrderClientCountLabel } from '@/lib/order-clients';
+import { getOrderClientLabel } from '@/lib/order-clients';
 import { StatusPill } from './status-pill';
 import { CfdiPill } from './cfdi-pill';
 import { OrderDetailPanel } from './order-detail-panel';
@@ -73,7 +73,7 @@ function InboxRow({
             </div>
           </div>
           <div style={{ marginTop: 4, fontSize: 12.5, color: '#6c6a74', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', display: 'block' }}>
-            {getOrderClientCountLabel(pedido)}
+            {getOrderClientLabel(pedido)}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

@@ -8,6 +8,7 @@ import { getOrderClientLabel } from '@/lib/order-clients';
 import { StatusPill } from './status-pill';
 import { CfdiPill } from './cfdi-pill';
 import { Printer, Copy, Mail, ArrowRight, Download, Calendar, ClipboardCopy } from 'lucide-react';
+import { exportPedidoPDF, exportPedidoExcel } from '@/lib/export-pedido';
 
 interface OrderDetailPanelProps {
   pedido: Pedido;
@@ -286,14 +287,23 @@ function ClienteTab({ pedido }: { pedido: Pedido }) {
   );
 }
 
-function DocsTab({ pedido }: { pedido: Pedido }) {
+function DocsTab({
+  pedido,
+  onDownloadPDF,
+  onDownloadExcel,
+}: {
+  pedido: Pedido;
+  onDownloadPDF: () => void;
+  onDownloadExcel: () => void;
+}) {
   const cfdiStatus = useCfdiStore((s) => s.cfdiStatuses[pedido.id]);
   const docs = [
-    { name: `Cotización — ${pedido.numero}`, type: 'PDF', size: '—' },
-    pedido.transmitido && { name: 'Orden de venta', type: 'PDF', size: '—' },
-    cfdiStatus?.invoiceStatus === 'facturado' && { name: `CFDI — ${pedido.numero}`, type: 'XML', size: '—' },
-    cfdiStatus?.invoiceStatus === 'facturado' && { name: `CFDI — ${pedido.numero}`, type: 'PDF', size: '—' },
-  ].filter(Boolean) as { name: string; type: string; size: string }[];
+    { name: `Cotización — ${pedido.numero}`, type: 'PDF', size: '—', onDownload: onDownloadPDF },
+    pedido.transmitido && { name: 'Orden de venta', type: 'PDF', size: '—', onDownload: onDownloadPDF },
+    { name: `Pedido — ${pedido.numero}`, type: 'XLSX', size: '—', onDownload: onDownloadExcel },
+    cfdiStatus?.invoiceStatus === 'facturado' && { name: `CFDI — ${pedido.numero}`, type: 'XML', size: '—', onDownload: undefined },
+    cfdiStatus?.invoiceStatus === 'facturado' && { name: `CFDI — ${pedido.numero}`, type: 'PDF', size: '—', onDownload: undefined },
+  ].filter(Boolean) as { name: string; type: string; size: string; onDownload?: () => void }[];
 
   return (
     <div style={{ maxWidth: 560 }}>
@@ -321,7 +331,7 @@ function DocsTab({ pedido }: { pedido: Pedido }) {
                 <div style={{ fontSize: 11, color: '#a19ea8', marginTop: 2 }}>{doc.size}</div>
               </div>
             </div>
-            <TbBtn>
+            <TbBtn onClick={doc.onDownload}>
               <Download size={13} />
               Descargar
             </TbBtn>
@@ -339,8 +349,22 @@ function DocsTab({ pedido }: { pedido: Pedido }) {
 
 export function OrderDetailPanel({ pedido, onNextStep, onEdit, onEmitirCFDI, onCopy }: OrderDetailPanelProps) {
   const [tab, setTab] = useState<'lineas' | 'historial' | 'cliente' | 'docs'>('lineas');
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
   const cfdiStatus = useCfdiStore((s) => s.cfdiStatuses[pedido.id]);
   const invoiceStatus = cfdiStatus?.invoiceStatus ?? 'no_facturado';
+
+  const handleExportPDF = async () => {
+    setIsExportingPDF(true);
+    try { await exportPedidoPDF(pedido); }
+    finally { setIsExportingPDF(false); }
+  };
+
+  const handleExportExcel = async () => {
+    setIsExportingExcel(true);
+    try { await exportPedidoExcel(pedido); }
+    finally { setIsExportingExcel(false); }
+  };
 
   const nextStepLabel: Record<string, string | null> = {
     cotizado:    'Transmitir a almacén',
@@ -394,7 +418,7 @@ export function OrderDetailPanel({ pedido, onNextStep, onEdit, onEmitirCFDI, onC
               {formatCurrency(pedido.total)}
             </div>
             <div style={{ fontSize: 11, color: '#a19ea8', marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>
-              {pedido.lineas.length} partidas
+              {pedido.lineas.length} productos
             </div>
           </div>
         </div>
@@ -406,7 +430,9 @@ export function OrderDetailPanel({ pedido, onNextStep, onEdit, onEmitirCFDI, onC
             <CfdiPill value={invoiceStatus} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <TbBtn><Printer size={13} /> Imprimir</TbBtn>
+            <TbBtn onClick={handleExportPDF}>
+              <Printer size={13} /> {isExportingPDF ? 'Generando...' : 'Imprimir PDF'}
+            </TbBtn>
             <TbBtn onClick={() => onEdit?.(pedido)}><Copy size={13} /> Editar</TbBtn>
             <TbBtn onClick={() => onCopy?.(pedido)}><ClipboardCopy size={13} /> Copiar pedido</TbBtn>
             <TbBtn><Mail size={13} /> Enviar al cliente</TbBtn>
@@ -443,7 +469,7 @@ export function OrderDetailPanel({ pedido, onNextStep, onEdit, onEmitirCFDI, onC
         {tab === 'lineas'    && <LineasTab pedido={pedido} />}
         {tab === 'historial' && <HistorialTab pedido={pedido} />}
         {tab === 'cliente'   && <ClienteTab pedido={pedido} />}
-        {tab === 'docs'      && <DocsTab pedido={pedido} />}
+        {tab === 'docs'      && <DocsTab pedido={pedido} onDownloadPDF={handleExportPDF} onDownloadExcel={handleExportExcel} />}
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import { Pedido, EstadoPedido } from '@/types';
 import { OrderStatusCode } from '@/services/orders';
 import { useCfdiStore } from '@/stores';
 import { formatCurrency } from '@/lib/utils';
-import { getOrderClientCountLabel } from '@/lib/order-clients';
+import { getOrderClientLabel } from '@/lib/order-clients';
 import { StatusPill } from './status-pill';
 import { CfdiPill } from './cfdi-pill';
 import { ChangeStatusMenu } from './change-status-menu';
@@ -166,7 +166,7 @@ export function OrdersTable({ pedidos, onOrderClick, onStatusChange, onEmitirCFD
                           {pedido.numero}
                         </span>
                       </td>
-                      <td style={{ padding: '12px 12px', fontWeight: 500 }}>{getOrderClientCountLabel(pedido)}</td>
+                      <td style={{ padding: '12px 12px', fontWeight: 500 }}>{getOrderClientLabel(pedido)}</td>
                       <td style={{ padding: '12px 12px' }}><StatusPill status={pedido.estado} /></td>
                       <td style={{ padding: '12px 12px' }}><CfdiPill value={invoiceStatus} /></td>
                       <td style={{ padding: '12px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: '#6c6a74' }}>

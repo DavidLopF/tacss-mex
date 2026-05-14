@@ -21,9 +21,13 @@ export const getOrderClientNames = (pedido: Pedido): string[] => {
   });
 };
 
-export const getOrderClientLabel = (pedido: Pedido, separator = ' - ') => {
+export const getOrderClientLabel = (pedido: Pedido, separator = ', ', maxNames = 2) => {
   const names = getOrderClientNames(pedido);
-  return names.length > 0 ? names.join(separator) : '—';
+  if (names.length === 0) return '—';
+  if (names.length <= maxNames) return names.join(separator);
+  const visible = names.slice(0, Math.max(1, maxNames));
+  const remaining = names.length - visible.length;
+  return `${visible.join(separator)} +${remaining}`;
 };
 
 export const getOrderClientSearchText = (pedido: Pedido) =>
